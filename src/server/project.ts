@@ -84,6 +84,7 @@ namespace ts.server {
         languageService: LanguageService;
         languageServiceHost: LanguageServiceHost;
         serverHost: ServerHost;
+        session?: Session<unknown>;
         config: any;
     }
 
@@ -254,7 +255,7 @@ namespace ts.server {
         /*@internal*/
         private changedFilesForExportMapCache: Set<Path> | undefined;
         /*@internal*/
-        private moduleSpecifierCache = createModuleSpecifierCache();
+        private moduleSpecifierCache = createModuleSpecifierCache(this);
         /*@internal*/
         private symlinks: SymlinkCache | undefined;
         /*@internal*/
@@ -353,10 +354,15 @@ namespace ts.server {
 
         /*@internal*/
         getSymlinkCache(): SymlinkCache {
-            return this.symlinks || (this.symlinks = discoverProbableSymlinks(
-                this.program?.getSourceFiles() || emptyArray,
-                this.getCanonicalFileName,
-                this.getCurrentDirectory()));
+            if (!this.symlinks) {
+                this.symlinks = createSymlinkCache(this.getCurrentDirectory(), this.getCanonicalFileName);
+            }
+            if (this.program && !this.symlinks.hasProcessedResolutions()) {
+                this.symlinks.setSymlinksFromResolutions(
+                    this.program.getSourceFiles(),
+                    this.program.getResolvedTypeReferenceDirectives());
+            }
+            return this.symlinks;
         }
 
         // Method of LanguageServiceHost
@@ -785,6 +791,7 @@ namespace ts.server {
             this.resolutionCache.clear();
             this.resolutionCache = undefined!;
             this.cachedUnresolvedImportsPerFile = undefined!;
+            this.moduleSpecifierCache = undefined!;
             this.directoryStructureHost = undefined!;
             this.projectErrors = undefined;
 
@@ -1225,12 +1232,12 @@ namespace ts.server {
             );
             const elapsed = timestamp() - start;
             this.sendPerformanceEvent("UpdateGraph", elapsed);
-            this.writeLog(`Finishing updateGraphWorker: Project: ${this.getProjectName()} Version: ${this.getProjectVersion()} structureChanged: ${hasNewProgram} Elapsed: ${elapsed}ms`);
+            this.writeLog(`Finishing updateGraphWorker: Project: ${this.getProjectName()} Version: ${this.getProjectVersion()} structureChanged: ${hasNewProgram}${this.program ? ` structureIsReused:: ${(ts as any).StructureIsReused[this.program.structureIsReused]}` : ""} Elapsed: ${elapsed}ms`);
             if (this.hasAddedorRemovedFiles) {
                 this.print(/*writeProjectFileNames*/ true);
             }
             else if (this.program !== oldProgram) {
-                this.writeLog(`Different program with same set of files:: structureIsReused:: ${this.program?.structureIsReused}`);
+                this.writeLog(`Different program with same set of files`);
             }
             return hasNewProgram;
         }
@@ -1389,6 +1396,7 @@ namespace ts.server {
                     this.cachedUnresolvedImportsPerFile.clear();
                     this.lastCachedUnresolvedImportsList = undefined;
                     this.resolutionCache.clear();
+                    this.moduleSpecifierCache.clear();
                 }
                 this.markAsDirty();
             }
@@ -1603,7 +1611,8 @@ namespace ts.server {
                     project: this,
                     languageService: this.languageService,
                     languageServiceHost: this,
-                    serverHost: this.projectService.host
+                    serverHost: this.projectService.host,
+                    session: this.projectService.session
                 };
 
                 const pluginModule = pluginModuleFactory({ typescript: ts });
@@ -1730,6 +1739,16 @@ namespace ts.server {
                 this.projectService.openFiles,
                 (_, fileName) => this.projectService.tryGetDefaultProjectForFile(toNormalizedPath(fileName)) === this);
         }
+
+        /*@internal*/
+        watchNodeModulesForPackageJsonChanges(directoryPath: string) {
+            return this.projectService.watchPackageJsonsInNodeModules(this.toPath(directoryPath), this);
+        }
+
+        /*@internal*/
+        getIncompleteCompletionsCache() {
+            return this.projectService.getIncompleteCompletionsCache();
+        }
     }
 
     function getUnresolvedImports(program: Program, cachedUnresolvedImportsPerFile: ESMap<Path, readonly string[]>): SortedReadonlyArray<string> {
@@ -1753,18 +1772,11 @@ namespace ts.server {
         });
     }
 
-    function createProjectNameFactoryWithCounter(nameFactory: (counter: number) => string) {
-        let nextId = 1;
-        return () => nameFactory(nextId++);
-    }
-
     /**
      * If a file is opened and no tsconfig (or jsconfig) is found,
      * the file and its imports/references are put into an InferredProject.
      */
     export class InferredProject extends Project {
-        private static readonly newName = createProjectNameFactoryWithCounter(makeInferredProjectName);
-
         private _isJsInferredProject = false;
 
         toggleJsInferredProject(isJsInferredProject: boolean) {
@@ -1807,7 +1819,7 @@ namespace ts.server {
             currentDirectory: string | undefined,
             pluginConfigOverrides: ESMap<string, any> | undefined,
             typeAcquisition: TypeAcquisition | undefined) {
-            super(InferredProject.newName(),
+            super(projectService.newInferredProjectName(),
                 ProjectKind.Inferred,
                 projectService,
                 documentRegistry,
@@ -1874,8 +1886,6 @@ namespace ts.server {
     }
 
     export class AutoImportProviderProject extends Project {
-        private static readonly newName = createProjectNameFactoryWithCounter(makeAutoImportProviderProjectName);
-
         /*@internal*/
         private static readonly maxDependencies = 10;
 
@@ -1966,7 +1976,7 @@ namespace ts.server {
             documentRegistry: DocumentRegistry,
             compilerOptions: CompilerOptions,
         ) {
-            super(AutoImportProviderProject.newName(),
+            super(hostProject.projectService.newAutoImportProviderProjectName(),
                 ProjectKind.AutoImportProvider,
                 hostProject.projectService,
                 documentRegistry,
@@ -2116,7 +2126,7 @@ namespace ts.server {
                 /*compileOnSaveEnabled*/ false,
                 /*watchOptions*/ undefined,
                 cachedDirectoryStructureHost,
-                getDirectoryPath(configFileName),
+                getDirectoryPath(configFileName)
             );
         }
 
