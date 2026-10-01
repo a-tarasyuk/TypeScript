@@ -1263,7 +1263,7 @@ func (tx *CommonJSModuleTransformer) visitTopLevelNestedWithStatement(node *ast.
 	return tx.Factory().UpdateWithStatement(
 		node,
 		tx.Visitor().VisitNode(node.Expression),
-		tx.topLevelNestedVisitor.VisitEmbeddedStatement(node.Statement),
+		tx.EmitContext().VisitEmbeddedStatement(node.Statement, tx.topLevelNestedVisitor),
 	)
 }
 

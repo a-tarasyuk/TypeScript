@@ -1,0 +1,46 @@
+a.cts(3,1): error TS1101: 'with' statements are not allowed in strict mode.
+a.cts(3,1): error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+a.cts(4,1): error TS1101: 'with' statements are not allowed in strict mode.
+a.cts(4,1): error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+a.cts(5,1): error TS1101: 'with' statements are not allowed in strict mode.
+a.cts(5,1): error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+a.cts(6,1): error TS1101: 'with' statements are not allowed in strict mode.
+a.cts(6,1): error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+a.ts(4,1): error TS1101: 'with' statements are not allowed in strict mode.
+a.ts(4,1): error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+
+
+==== a.cts (8 errors) ====
+    declare const obj: any;
+    
+    with (obj) /* body */ export let a; // trailing
+    ~~~~
+!!! error TS1101: 'with' statements are not allowed in strict mode.
+    ~~~~~~~~~~
+!!! error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+    with (obj) export var b;
+    ~~~~
+!!! error TS1101: 'with' statements are not allowed in strict mode.
+    ~~~~~~~~~~
+!!! error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+    with (obj) export let c = 1;
+    ~~~~
+!!! error TS1101: 'with' statements are not allowed in strict mode.
+    ~~~~~~~~~~
+!!! error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+    with (obj) { export let d; }
+    ~~~~
+!!! error TS1101: 'with' statements are not allowed in strict mode.
+    ~~~~~~~~~~
+!!! error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+    
+==== a.ts (2 errors) ====
+    export {};
+    declare const obj: any;
+    
+    with (obj) export let a;
+    ~~~~
+!!! error TS1101: 'with' statements are not allowed in strict mode.
+    ~~~~~~~~~~
+!!! error TS2410: The 'with' statement is not supported. All symbols in a 'with' block will have type 'any'.
+    
