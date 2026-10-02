@@ -1,0 +1,28 @@
+b.ts(1,1): error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+b.ts(2,1): error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+c.js(1,1): error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+c.js(2,1): error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+
+
+==== package.json (0 errors) ====
+    { "type": "module" }
+    
+==== a.ts (0 errors) ====
+    export const a = 1;
+    
+==== b.ts (2 errors) ====
+    export defer { a } from "./a.js";
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+    export defer * as b from "./a.js";
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+    
+==== c.js (2 errors) ====
+    export defer { a } from "./a.js";
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+    export defer * as b from "./a.js";
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18118: Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.
+    

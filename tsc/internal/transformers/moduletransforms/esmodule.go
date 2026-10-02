@@ -152,8 +152,8 @@ func (tx *ESModuleTransformer) visitImportEqualsDeclaration(node *ast.ImportEqua
 func (tx *ESModuleTransformer) appendExportsOfImportEqualsDeclaration(statements []*ast.Statement, node *ast.ImportEqualsDeclaration) []*ast.Statement {
 	if ast.HasSyntacticModifier(node.AsNode(), ast.ModifierFlagsExport) {
 		statements = append(statements, tx.Factory().NewExportDeclaration(
-			nil,   /*modifiers*/
-			false, /*isTypeOnly*/
+			nil,             /*modifiers*/
+			ast.KindUnknown, /*phaseModifier*/
 			tx.Factory().NewNamedExports(
 				tx.Factory().NewNodeList([]*ast.Node{
 					tx.Factory().NewExportSpecifier(
@@ -203,8 +203,8 @@ func (tx *ESModuleTransformer) visitExportDeclaration(node *ast.ExportDeclaratio
 		// Either ill-formed or don't need to be transformed.
 		return tx.Factory().UpdateExportDeclaration(
 			node,
-			nil,   /*modifiers*/
-			false, /*isTypeOnly*/
+			nil, /*modifiers*/
+			node.PhaseModifier,
 			node.ExportClause,
 			updatedModuleSpecifier,
 			tx.Visitor().VisitNode(node.Attributes),
@@ -230,8 +230,8 @@ func (tx *ESModuleTransformer) visitExportDeclaration(node *ast.ExportDeclaratio
 		exportDecl = tx.Factory().NewExportAssignment(nil /*modifiers*/, false /*isExportEquals*/, nil /*typeNode*/, synthName)
 	} else {
 		exportDecl = tx.Factory().NewExportDeclaration(
-			nil,   /*modifiers*/
-			false, /*isTypeOnly*/
+			nil,             /*modifiers*/
+			ast.KindUnknown, /*phaseModifier*/
 			tx.Factory().NewNamedExports(
 				tx.Factory().NewNodeList([]*ast.Node{
 					tx.Factory().NewExportSpecifier(false /*isTypeOnly*/, synthName, oldIdentifier),

@@ -1,8 +1,8 @@
 //// [tests/cases/conformance/importDefer/exportDeferInvalid.ts] ////
 
 === a.ts ===
-export function foo() {
->foo : () => void
+export function f() {
+>f : () => void
 
   console.log("foo from a");
 >console.log("foo from a") : void
@@ -13,11 +13,6 @@ export function foo() {
 }
 
 === b.ts ===
-export defer * as ns from "a";
->defer * as : number
->defer : any
->as : any
->ns : any
->from : any
->"a" : "a"
+
+export defer * from "./a.js";
 

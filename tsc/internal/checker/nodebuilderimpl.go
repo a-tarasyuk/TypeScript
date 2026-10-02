@@ -2904,6 +2904,9 @@ func (b *NodeBuilderImpl) shouldEmitTypeOfSymbol(forceExpansion bool, forceClass
 	if forceExpansion {
 		return false, symbol
 	}
+	if symbol.Flags&ast.SymbolFlagsAlias != 0 && isDeferredNamespaceDeclaration(b.ch.getDeclarationOfAliasSymbol(symbol)) {
+		return true, symbol
+	}
 	nonFunctionResult := symbol.Flags&ast.SymbolFlagsClass != 0 && !forceClassExpansion && b.ch.getBaseTypeVariableOfClass(symbol) == nil && !(symbol.ValueDeclaration != nil && ast.IsClassLike(symbol.ValueDeclaration) && b.ctx.flags&nodebuilder.FlagsWriteClassExpressionAsTypeLiteral != 0 && (!ast.IsClassDeclaration(symbol.ValueDeclaration) || b.ch.IsSymbolAccessible(symbol, b.ctx.enclosingDeclaration, isInstanceType, false /*shouldComputeAliasesToMakeVisible*/).Accessibility != printer.SymbolAccessibilityAccessible)) || symbol.Flags&(ast.SymbolFlagsEnum|ast.SymbolFlagsValueModule) != 0
 	if nonFunctionResult {
 		return true, symbol

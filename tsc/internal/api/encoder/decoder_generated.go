@@ -1074,13 +1074,19 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		moduleReference := d.nodeAt(it.nextIf(mask, 2))
 		return d.factory.NewImportEqualsDeclaration(modifiers, isTypeOnly, name, moduleReference), nil
 	case ast.KindExportDeclaration:
-		isTypeOnly := commonData&1 != 0
+		var phaseModifier ast.Kind
+		switch commonData & 3 {
+		case 1:
+			phaseModifier = ast.KindTypeKeyword
+		case 2:
+			phaseModifier = ast.KindDeferKeyword
+		}
 		it := newChildIter(childIndices)
 		modifiers := d.modifierListAt(it.nextIf(mask, 0))
 		exportClause := d.nodeAt(it.nextIf(mask, 1))
 		moduleSpecifier := d.nodeAt(it.nextIf(mask, 2))
 		attributes := d.nodeAt(it.nextIf(mask, 3))
-		return d.factory.NewExportDeclaration(modifiers, isTypeOnly, exportClause, moduleSpecifier, attributes), nil
+		return d.factory.NewExportDeclaration(modifiers, phaseModifier, exportClause, moduleSpecifier, attributes), nil
 	case ast.KindImportType:
 		isTypeOf := commonData&1 != 0
 		it := newChildIter(childIndices)

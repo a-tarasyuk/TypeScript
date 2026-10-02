@@ -1,0 +1,192 @@
+//// [tests/cases/compiler/exportDefer6.ts] ////
+
+=== a.ts ===
+export let a = 1;
+>a : Symbol(a, Decl(a.ts, 0, 10))
+
+export function then(): number {
+>then : Symbol(then, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+
+    return a;
+>a : Symbol(a, Decl(a.ts, 0, 10))
+}
+export interface then {
+>then : Symbol(then, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+
+    a: number;
+>a : Symbol(then.a, Decl(a.ts, 4, 23))
+}
+export interface I {
+>I : Symbol(I, Decl(a.ts, 6, 1))
+
+    a: number;
+>a : Symbol(I.a, Decl(a.ts, 7, 20))
+}
+export type * from "./e.js";
+
+=== b.ts ===
+export defer * as b from "./a.js";
+>b : Symbol(b, Decl(b.ts, 0, 12))
+
+export defer { then as c } from "./a.js";
+>then : Symbol(then, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+>c : Symbol(c, Decl(b.ts, 1, 14))
+
+export defer * as d from "./f.js";
+>d : Symbol(d, Decl(b.ts, 2, 12))
+
+=== c.ts ===
+import defer * as a from "./a.js";
+>a : Symbol(a, Decl(c.ts, 0, 12))
+
+export { a };
+>a : Symbol(a, Decl(c.ts, 1, 8))
+
+export const d = a;
+>d : Symbol(d, Decl(c.ts, 2, 12))
+>a : Symbol(a, Decl(c.ts, 0, 12))
+
+export * from "./b.js";
+export { b as e } from "./b.js";
+>b : Symbol(b, Decl(b.ts, 0, 12))
+>e : Symbol(e, Decl(c.ts, 4, 8))
+
+export type I = a.I;
+>I : Symbol(I, Decl(c.ts, 4, 32))
+>a : Symbol(a, Decl(c.ts, 0, 12))
+>I : Symbol(a.I, Decl(a.ts, 6, 1))
+
+export type J = a.then;
+>J : Symbol(J, Decl(c.ts, 5, 20))
+>a : Symbol(a, Decl(c.ts, 0, 12))
+>then : Symbol(a.then, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+
+export const f = import.defer("./a.js");
+>f : Symbol(f, Decl(c.ts, 7, 12))
+>"./a.js" : Symbol("./a.js", Decl(a.ts, 0, 0))
+
+export const g = (await import("./b.js")).b;
+>g : Symbol(g, Decl(c.ts, 8, 12))
+>(await import("./b.js")).b : Symbol(b, Decl(b.ts, 0, 12))
+>"./b.js" : Symbol("./b.js", Decl(b.ts, 0, 0))
+>b : Symbol(b, Decl(b.ts, 0, 12))
+
+=== d.ts ===
+import * as a from "./a.js";
+>a : Symbol(a, Decl(d.ts, 0, 6))
+
+import { a as b, b as c, c as d, d as e, e as f } from "./c.js";
+>a : Symbol(a, Decl(c.ts, 1, 8))
+>b : Symbol(b, Decl(d.ts, 1, 8))
+>b : Symbol(b, Decl(b.ts, 0, 12))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>c : Symbol(a.then, Decl(b.ts, 1, 14))
+>d : Symbol(d, Decl(d.ts, 1, 24))
+>d : Symbol(e, Decl(c.ts, 2, 12))
+>e : Symbol(e, Decl(d.ts, 1, 32))
+>e : Symbol(e, Decl(c.ts, 4, 8))
+>f : Symbol(f, Decl(d.ts, 1, 40))
+
+export const g: number = a.then() + d() + b.a + c.a + e.a + f.a;
+>g : Symbol(g, Decl(d.ts, 2, 12))
+>a.then : Symbol(d, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+>a : Symbol(a, Decl(d.ts, 0, 6))
+>then : Symbol(d, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+>d : Symbol(d, Decl(d.ts, 1, 24))
+>b.a : Symbol(a.a, Decl(a.ts, 0, 10))
+>b : Symbol(b, Decl(d.ts, 1, 8))
+>a : Symbol(a.a, Decl(a.ts, 0, 10))
+>c.a : Symbol(a.a, Decl(a.ts, 0, 10))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>a : Symbol(a.a, Decl(a.ts, 0, 10))
+>e.a : Symbol(a.a, Decl(a.ts, 0, 10))
+>e : Symbol(e, Decl(d.ts, 1, 32))
+>a : Symbol(a.a, Decl(a.ts, 0, 10))
+>f.a : Symbol(a.a, Decl(a.ts, 0, 10))
+>f : Symbol(f, Decl(d.ts, 1, 40))
+>a : Symbol(a.a, Decl(a.ts, 0, 10))
+
+export type I = c.I;
+>I : Symbol(I, Decl(d.ts, 2, 64))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>I : Symbol(a.I, Decl(a.ts, 6, 1))
+
+export type J = c.then;
+>J : Symbol(J, Decl(d.ts, 3, 20))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>then : Symbol(d, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+
+b.then();
+>b : Symbol(b, Decl(d.ts, 1, 8))
+
+c.then();
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+e.then();
+>e : Symbol(e, Decl(d.ts, 1, 32))
+
+f.then();
+>f : Symbol(f, Decl(d.ts, 1, 40))
+
+b["then"]();
+>b : Symbol(b, Decl(d.ts, 1, 8))
+
+type K = typeof c.then;
+>K : Symbol(K, Decl(d.ts, 9, 12))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+const h: keyof typeof c = "then";
+>h : Symbol(h, Decl(d.ts, 11, 5))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+const i: typeof a = c;
+>i : Symbol(i, Decl(d.ts, 12, 5))
+>a : Symbol(a, Decl(d.ts, 0, 6))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+import { d as j } from "./b.js";
+>d : Symbol(d, Decl(b.ts, 2, 12))
+>j : Symbol(j, Decl(d.ts, 13, 8))
+
+const k: keyof typeof j = "then";
+>k : Symbol(k, Decl(d.ts, 14, 5))
+>j : Symbol(j, Decl(d.ts, 13, 8))
+
+type L = j.then;
+>L : Symbol(L, Decl(d.ts, 14, 33))
+>j : Symbol(j, Decl(d.ts, 13, 8))
+>then : Symbol(d, Decl(a.ts, 0, 17), Decl(a.ts, 3, 1))
+
+c.b;
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+import.defer("./a.js").then(a => {
+>import.defer("./a.js").then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>"./a.js" : Symbol(a, Decl(a.ts, 0, 0))
+>then : Symbol(Promise.then, Decl(lib.es5.d.ts, --, --))
+>a : Symbol(a, Decl(d.ts, 17, 28))
+
+    const b: number = a.a;
+>b : Symbol(b, Decl(d.ts, 18, 9))
+>a.a : Symbol(a.a, Decl(a.ts, 0, 10))
+>a : Symbol(a, Decl(d.ts, 17, 28))
+>a : Symbol(a.a, Decl(a.ts, 0, 10))
+
+    a.then();
+>a : Symbol(a, Decl(d.ts, 17, 28))
+
+    a.b;
+>a : Symbol(a, Decl(d.ts, 17, 28))
+
+});
+
+=== e.ts ===
+export const b = 1;
+>b : Symbol(b, Decl(e.ts, 0, 12))
+
+=== f.ts ===
+export const a = 1;
+>a : Symbol(a, Decl(f.ts, 0, 12))
+
+export type * from "./a.js";
+

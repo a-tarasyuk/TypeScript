@@ -1,21 +1,17 @@
 //// [tests/cases/conformance/importDefer/exportDeferInvalid.ts] ////
 
 //// [a.ts]
-export function foo() {
+export function f() {
   console.log("foo from a");
 }
 
 //// [b.ts]
-export defer * as ns from "a";
+export defer * from "./a.js";
 
 
 //// [a.js]
-export function foo() {
+export function f() {
     console.log("foo from a");
 }
 //// [b.js]
-"use strict";
-defer * as;
-ns;
-from;
-"a";
+export defer * from "./a.js";

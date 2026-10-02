@@ -885,7 +885,7 @@ func (n *Node) IsTypeOnly() bool {
 	case KindImportClause:
 		return n.AsImportClause().PhaseModifier == KindTypeKeyword
 	case KindExportDeclaration:
-		return n.AsExportDeclaration().IsTypeOnly
+		return n.AsExportDeclaration().PhaseModifier == KindTypeKeyword
 	case KindExportSpecifier:
 		return n.AsExportSpecifier().IsTypeOnly
 	}
@@ -1910,7 +1910,7 @@ func (node *ExportDeclaration) computeSubtreeFacts() SubtreeFacts {
 		propagateSubtreeFacts(node.ExportClause) |
 		propagateSubtreeFacts(node.ModuleSpecifier) |
 		propagateSubtreeFacts(node.Attributes) |
-		core.IfElse(node.IsTypeOnly, SubtreeContainsTypeScript, SubtreeFactsNone)
+		core.IfElse(node.PhaseModifier == KindTypeKeyword, SubtreeContainsTypeScript, SubtreeFactsNone)
 }
 
 func (node *ExportSpecifier) computeSubtreeFacts() SubtreeFacts {

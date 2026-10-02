@@ -2723,7 +2723,7 @@ func (c *Checker) markNodeAssignmentsWorker(node *ast.Node) bool {
 	case ast.KindExportSpecifier:
 		exportDeclaration := node.AsExportSpecifier().Parent.Parent.AsExportDeclaration()
 		name := node.PropertyNameOrName()
-		if !node.IsTypeOnly() && !exportDeclaration.IsTypeOnly && exportDeclaration.ModuleSpecifier == nil && !ast.IsStringLiteral(name) {
+		if !node.IsTypeOnly() && !exportDeclaration.IsTypeOnly() && exportDeclaration.ModuleSpecifier == nil && !ast.IsStringLiteral(name) {
 			symbol := c.resolveEntityName(name, ast.SymbolFlagsValue, true /*ignoreErrors*/, true /*dontResolveAlias*/, nil)
 			if symbol != nil && c.isParameterOrMutableLocalVariable(symbol) {
 				links := c.markedAssignmentSymbolLinks.Get(symbol)

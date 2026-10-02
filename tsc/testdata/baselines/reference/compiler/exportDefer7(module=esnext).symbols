@@ -1,0 +1,80 @@
+//// [tests/cases/compiler/exportDefer7.ts] ////
+
+=== a.d.ts ===
+export let a: number;
+>a : Symbol(a, Decl(a.d.ts, 0, 10))
+
+export function then(): number;
+>then : Symbol(then, Decl(a.d.ts, 0, 21))
+
+export interface I {
+>I : Symbol(I, Decl(a.d.ts, 1, 31))
+
+    a: number;
+>a : Symbol(I.a, Decl(a.d.ts, 2, 20))
+}
+
+=== b.d.ts ===
+export defer * as b from "./a.js";
+>b : Symbol(b, Decl(b.d.ts, 0, 12))
+
+export defer { then as c } from "./a.js";
+>then : Symbol(then, Decl(a.d.ts, 0, 21))
+>c : Symbol(c, Decl(b.d.ts, 1, 14))
+
+=== c.d.ts ===
+import defer * as a from "./a.js";
+>a : Symbol(a, Decl(c.d.ts, 0, 12))
+
+export { a };
+>a : Symbol(a, Decl(c.d.ts, 1, 8))
+
+export * from "./b.js";
+export declare const d: typeof a;
+>d : Symbol(d, Decl(c.d.ts, 3, 20))
+>a : Symbol(a, Decl(c.d.ts, 0, 12))
+
+=== d.ts ===
+import * as a from "./a.js";
+>a : Symbol(a, Decl(d.ts, 0, 6))
+
+import { a as b, b as c, c as d, d as e } from "./c.js";
+>a : Symbol(a, Decl(c.d.ts, 1, 8))
+>b : Symbol(b, Decl(d.ts, 1, 8))
+>b : Symbol(b, Decl(b.d.ts, 0, 12))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>c : Symbol(a.then, Decl(b.d.ts, 1, 14))
+>d : Symbol(d, Decl(d.ts, 1, 24))
+>d : Symbol(e, Decl(c.d.ts, 3, 20))
+>e : Symbol(e, Decl(d.ts, 1, 32))
+
+const f: number = a.then() + d() + b.a + c.a + e.a;
+>f : Symbol(f, Decl(d.ts, 2, 5))
+>a.then : Symbol(d, Decl(a.d.ts, 0, 21))
+>a : Symbol(a, Decl(d.ts, 0, 6))
+>then : Symbol(d, Decl(a.d.ts, 0, 21))
+>d : Symbol(d, Decl(d.ts, 1, 24))
+>b.a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+>b : Symbol(b, Decl(d.ts, 1, 8))
+>a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+>c.a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+>e.a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+>e : Symbol(e, Decl(d.ts, 1, 32))
+>a : Symbol(a.a, Decl(a.d.ts, 0, 10))
+
+type I = c.I;
+>I : Symbol(I, Decl(d.ts, 2, 51))
+>c : Symbol(c, Decl(d.ts, 1, 16))
+>I : Symbol(a.I, Decl(a.d.ts, 1, 31))
+
+b.then();
+>b : Symbol(b, Decl(d.ts, 1, 8))
+
+c.then();
+>c : Symbol(c, Decl(d.ts, 1, 16))
+
+e.then();
+>e : Symbol(e, Decl(d.ts, 1, 32))
+

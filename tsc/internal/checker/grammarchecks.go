@@ -197,10 +197,31 @@ func (c *Checker) checkGrammarDecorator(decorator *ast.Decorator) bool {
 }
 
 func (c *Checker) checkGrammarExportDeclaration(node *ast.ExportDeclaration) bool {
-	if node.IsTypeOnly && node.ExportClause != nil && node.ExportClause.Kind == ast.KindNamedExports {
-		return c.checkGrammarTypeOnlyNamedImportsOrExports(node.ExportClause)
+	switch node.PhaseModifier {
+	case ast.KindTypeKeyword:
+		if node.ExportClause != nil && ast.IsNamedExports(node.ExportClause) {
+			return c.checkGrammarTypeOnlyNamedImportsOrExports(node.ExportClause)
+		}
+	case ast.KindDeferKeyword:
+		if node.ExportClause == nil {
+			return c.grammarErrorOnNode(node.AsNode(), diagnostics.Wildcard_re_exports_are_not_allowed_in_a_deferred_export)
+		}
+		if node.ModuleSpecifier == nil {
+			return c.grammarErrorOnNode(node.AsNode(), diagnostics.Deferred_re_exports_must_specify_a_module_specifier)
+		}
+		return c.checkGrammarDeferredModuleSyntax(node.AsNode(), diagnostics.Deferred_exports_are_only_supported_when_the_module_flag_is_set_to_esnext_or_preserve)
 	}
 	return false
+}
+
+func (c *Checker) checkGrammarDeferredModuleSyntax(node *ast.Node, message *diagnostics.Message) bool {
+	if c.moduleKind.SupportsDeferredImports() {
+		return false
+	}
+	if ast.GetSourceFileOfNode(node).IsDeclarationFile {
+		return false
+	}
+	return c.grammarErrorOnNode(node, message)
 }
 
 func (c *Checker) checkGrammarModuleElementContext(node *ast.Statement, errorMessage *diagnostics.Message) bool {
@@ -2113,10 +2134,7 @@ func (c *Checker) checkGrammarImportClause(node *ast.ImportClause) bool {
 		if node.NamedBindings != nil && node.NamedBindings.Kind == ast.KindNamedImports {
 			return c.grammarErrorOnNode(&node.Node, diagnostics.Named_imports_are_not_allowed_in_a_deferred_import)
 		}
-		if c.moduleKind.SupportsDeferredImports() {
-			break
-		}
-		return c.grammarErrorOnNode(&node.Node, diagnostics.Deferred_imports_are_only_supported_when_the_module_flag_is_set_to_esnext_or_preserve)
+		return c.checkGrammarDeferredModuleSyntax(node.AsNode(), diagnostics.Deferred_imports_are_only_supported_when_the_module_flag_is_set_to_esnext_or_preserve)
 	case ast.KindSourceKeyword:
 		if node.NamedBindings != nil {
 			return c.grammarErrorOnNode(&node.Node, diagnostics.Named_and_namespace_imports_are_not_allowed_in_a_source_phase_import)

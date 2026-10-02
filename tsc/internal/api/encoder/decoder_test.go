@@ -199,6 +199,29 @@ func TestDecodeSourceFile_ImportDeclaration(t *testing.T) {
 	assert.Equal(t, spec.Name().AsIdentifier().Text, "bar")
 }
 
+func TestDecodeSourceFile_ExportDeclaration(t *testing.T) {
+	t.Parallel()
+	sf := parseSourceFile(`export { a } from "./a";
+export type { I } from "./a";
+export defer { a } from "./a";
+export defer * as b from "./a" with { type: "json" };`)
+	buf, _, err := encoder.EncodeSourceFile(sf)
+	assert.NilError(t, err)
+	decoded, err := encoder.DecodeSourceFile(buf)
+	assert.NilError(t, err)
+	assert.Equal(t, len(decoded.Statements.Nodes), 4)
+	for i, phase := range []ast.Kind{ast.KindUnknown, ast.KindTypeKeyword, ast.KindDeferKeyword, ast.KindDeferKeyword} {
+		exportDecl := decoded.Statements.Nodes[i].AsExportDeclaration()
+		assert.Equal(t, exportDecl.PhaseModifier, phase)
+		assert.Equal(t, exportDecl.IsTypeOnly(), phase == ast.KindTypeKeyword)
+		assert.Equal(t, exportDecl.ModuleSpecifier.Text(), "./a")
+		assert.Equal(t, exportDecl.ExportClause.Kind, sf.Statements.Nodes[i].AsExportDeclaration().ExportClause.Kind)
+	}
+	exportDecl := decoded.Statements.Nodes[3].AsExportDeclaration()
+	assert.Equal(t, exportDecl.ExportClause.Name().Text(), "b")
+	assert.Equal(t, exportDecl.Attributes.AsImportAttributes().Attributes.Nodes[0].AsImportAttribute().Value.Text(), "json")
+}
+
 func TestDecodeSourceFile_SourcePhaseImport(t *testing.T) {
 	t.Parallel()
 	sf := parseSourceFile(`import source a from "./a.wasm";`)

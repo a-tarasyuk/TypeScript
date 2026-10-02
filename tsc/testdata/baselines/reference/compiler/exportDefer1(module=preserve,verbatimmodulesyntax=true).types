@@ -1,0 +1,86 @@
+//// [tests/cases/compiler/exportDefer1.ts] ////
+
+=== a.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+export function f(a: string): number {
+>f : (a: string) => number
+>a : string
+
+    return a.length;
+>a.length : number
+>a : string
+>length : number
+}
+export interface I {
+    a: number;
+>a : number
+}
+export default a;
+>a : 1
+
+=== b.ts ===
+export defer { a, f as g, default as b, type I } from "./a.js";
+>a : 1
+>f : (a: string) => number
+>g : (a: string) => number
+>default : 1
+>b : 1
+>I : any
+
+export defer * as c from "./a.js";
+>c : typeof import("./a.js")
+
+export defer { a as "d-e" } from "./a.js";
+>a : 1
+>"d-e" : 1
+
+export defer {} from "./a.js";
+export
+defer
+{ a as h } from "./a.js" with { type: "javascript" };
+>a : 1
+>h : 1
+>type : error
+
+=== c.ts ===
+
+export * from "./b.js";
+
+=== d.ts ===
+import { a, b, c, g, h, "d-e" as d, type I } from "./c.js";
+>a : 1
+>b : 1
+>c : typeof c
+>g : (a: string) => number
+>h : 1
+>d : 1
+>I : any
+
+export const e: I = { a };
+>e : I
+>{ a } : { a: number; }
+>a : number
+
+export const f: number = g("a") + b + c.a + d + h;
+>f : number
+>g("a") + b + c.a + d + h : number
+>g("a") + b + c.a + d : number
+>g("a") + b + c.a : number
+>g("a") + b : number
+>g("a") : number
+>g : (a: string) => number
+>"a" : "a"
+>b : 1
+>c.a : 1
+>c : typeof c
+>a : 1
+>d : 1
+>h : 1
+
+export type J = c.I;
+>J : I
+>c : any
+

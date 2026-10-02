@@ -1,0 +1,100 @@
+d.ts(6,3): error TS2339: Property 'then' does not exist on type 'typeof a'.
+d.ts(7,3): error TS2339: Property 'then' does not exist on type 'typeof b'.
+d.ts(8,3): error TS2339: Property 'then' does not exist on type 'typeof a'.
+d.ts(9,3): error TS2339: Property 'then' does not exist on type 'typeof b'.
+d.ts(10,1): error TS7053: Element implicitly has an 'any' type because expression of type '"then"' can't be used to index type 'typeof a'.
+  Property 'then' does not exist on type 'typeof a'.
+d.ts(11,19): error TS2339: Property 'then' does not exist on type 'typeof b'.
+d.ts(12,7): error TS2322: Type '"then"' is not assignable to type '"a"'.
+d.ts(13,7): error TS2739: Type 'typeof b' is missing the following properties from type 'typeof import("a")': b, then
+d.ts(15,7): error TS2322: Type '"then"' is not assignable to type '"a"'.
+d.ts(17,3): error TS2339: Property 'b' does not exist on type 'typeof b'.
+d.ts(20,7): error TS2339: Property 'then' does not exist on type '{ a: number; }'.
+d.ts(21,7): error TS2339: Property 'b' does not exist on type '{ a: number; }'.
+
+
+==== a.ts (0 errors) ====
+    export let a = 1;
+    export function then(): number {
+        return a;
+    }
+    export interface then {
+        a: number;
+    }
+    export interface I {
+        a: number;
+    }
+    export type * from "./e.js";
+    
+==== b.ts (0 errors) ====
+    export defer * as b from "./a.js";
+    export defer { then as c } from "./a.js";
+    export defer * as d from "./f.js";
+    
+==== c.ts (0 errors) ====
+    import defer * as a from "./a.js";
+    export { a };
+    export const d = a;
+    export * from "./b.js";
+    export { b as e } from "./b.js";
+    export type I = a.I;
+    export type J = a.then;
+    export const f = import.defer("./a.js");
+    export const g = (await import("./b.js")).b;
+    
+==== d.ts (12 errors) ====
+    import * as a from "./a.js";
+    import { a as b, b as c, c as d, d as e, e as f } from "./c.js";
+    export const g: number = a.then() + d() + b.a + c.a + e.a + f.a;
+    export type I = c.I;
+    export type J = c.then;
+    b.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof a'.
+    c.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof b'.
+    e.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof a'.
+    f.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof b'.
+    b["then"]();
+    ~~~~~~~~~
+!!! error TS7053: Element implicitly has an 'any' type because expression of type '"then"' can't be used to index type 'typeof a'.
+!!! error TS7053:   Property 'then' does not exist on type 'typeof a'.
+    type K = typeof c.then;
+                      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof b'.
+    const h: keyof typeof c = "then";
+          ~
+!!! error TS2322: Type '"then"' is not assignable to type '"a"'.
+    const i: typeof a = c;
+          ~
+!!! error TS2739: Type 'typeof b' is missing the following properties from type 'typeof import("a")': b, then
+    import { d as j } from "./b.js";
+    const k: keyof typeof j = "then";
+          ~
+!!! error TS2322: Type '"then"' is not assignable to type '"a"'.
+    type L = j.then;
+    c.b;
+      ~
+!!! error TS2339: Property 'b' does not exist on type 'typeof b'.
+    import.defer("./a.js").then(a => {
+        const b: number = a.a;
+        a.then();
+          ~~~~
+!!! error TS2339: Property 'then' does not exist on type '{ a: number; }'.
+        a.b;
+          ~
+!!! error TS2339: Property 'b' does not exist on type '{ a: number; }'.
+    });
+    
+==== e.ts (0 errors) ====
+    export const b = 1;
+    
+==== f.ts (0 errors) ====
+    export const a = 1;
+    export type * from "./a.js";
+    

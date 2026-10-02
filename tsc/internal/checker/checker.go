@@ -8489,6 +8489,9 @@ func (c *Checker) checkImportCallExpression(node *ast.Node) *Type {
 			if syntheticType == nil {
 				syntheticType = c.getTypeWithSyntheticDefaultImportType(c.getTypeOfSymbol(esModuleSymbol), esModuleSymbol, moduleSymbol, specifier)
 			}
+			if ast.IsImportDeferMetaProperty(node.Expression()) {
+				syntheticType = c.getDeferredModuleType(syntheticType)
+			}
 			return c.createPromiseReturnType(node, syntheticType)
 		}
 	}
@@ -14888,6 +14891,9 @@ func (c *Checker) getTargetOfNamespaceImport(node *ast.Node) *ast.Symbol {
 	immediate := c.resolveExternalModuleName(node, moduleSpecifier, false /*ignoreErrors*/, c.getTypeFromImportAttributes(ast.GetImportAttributes(node.Parent.Parent)))
 	resolved := c.resolveESModuleSymbol(immediate, node, moduleSpecifier)
 	c.markSymbolOfAliasDeclarationIfTypeOnly(node, nil)
+	if isDeferredNamespaceDeclaration(node) {
+		return c.getDeferredNamespaceSymbol(resolved, node)
+	}
 	return resolved
 }
 
@@ -14897,9 +14903,60 @@ func (c *Checker) getTargetOfNamespaceExport(node *ast.Node) *ast.Symbol {
 		immediate := c.resolveExternalModuleName(node, moduleSpecifier, false /*ignoreErrors*/, c.getTypeFromImportAttributes(ast.GetImportAttributes(node.Parent)))
 		resolved := c.resolveESModuleSymbol(immediate, node, moduleSpecifier)
 		c.markSymbolOfAliasDeclarationIfTypeOnly(node, nil)
+		if isDeferredNamespaceDeclaration(node) {
+			return c.getDeferredNamespaceSymbol(resolved, node)
+		}
 		return resolved
 	}
 	return nil
+}
+
+func (c *Checker) getDeferredNamespaceSymbol(symbol *ast.Symbol, declaration *ast.Node) *ast.Symbol {
+	if symbol == nil {
+		return nil
+	}
+	if symbol.Flags&ast.SymbolFlagsModule != 0 {
+		then := c.getExportsOfSymbol(symbol)["then"]
+		if then == nil || then.Flags&(ast.SymbolFlagsValue|ast.SymbolFlagsAlias) == 0 && len(c.moduleSymbolLinks.Get(symbol).typeOnlyExportStarMap) == 0 {
+			return symbol
+		}
+		result := c.cloneModuleSymbol(symbol)
+		c.exportTypeLinks.Get(result).deferredDeclaration = declaration
+		return result
+	}
+	t := c.getTypeOfSymbol(symbol)
+	deferredType := c.getDeferredModuleType(t)
+	if deferredType != t {
+		result := c.cloneModuleSymbol(symbol)
+		deferredType.symbol = c.getSymbolOfDeclaration(declaration)
+		c.valueSymbolLinks.Get(result).resolvedType = deferredType
+		return result
+	}
+	return symbol
+}
+
+func (c *Checker) getDeferredModuleType(t *Type) *Type {
+	if t.flags&TypeFlagsObject == 0 {
+		return t
+	}
+	resolved := c.resolveStructuredTypeMembers(t)
+	then := resolved.members["then"]
+	if then == nil {
+		return t
+	}
+	var typeOnlyExports map[string]*ast.Node
+	if t.symbol != nil && t.symbol.Flags&ast.SymbolFlagsModule != 0 {
+		typeOnlyExports = c.moduleSymbolLinks.Get(t.symbol).typeOnlyExportStarMap
+	}
+	if then.Flags&(ast.SymbolFlagsValue|ast.SymbolFlagsAlias) == 0 && len(typeOnlyExports) == 0 {
+		return t
+	}
+	members := maps.Clone(resolved.members)
+	delete(members, "then")
+	for name := range typeOnlyExports {
+		delete(members, name)
+	}
+	return c.newAnonymousType(nil, members, nil, nil, resolved.indexInfos)
 }
 
 func (c *Checker) getTargetOfImportSpecifier(node *ast.Node) *ast.Symbol {
@@ -16073,16 +16130,20 @@ func (c *Checker) createDefaultPropertyWrapperForModule(symbol *ast.Symbol, orig
 	return c.newAnonymousType(anonymousSymbol, memberTable, nil, nil, nil)
 }
 
-func (c *Checker) cloneTypeAsModuleType(symbol *ast.Symbol, moduleType *Type, referenceParent *ast.Node) *ast.Symbol {
+func (c *Checker) cloneModuleSymbol(symbol *ast.Symbol) *ast.Symbol {
 	result := c.newSymbol(symbol.Flags, symbol.Name)
 	result.Declarations = slices.Clone(symbol.Declarations)
 	result.ValueDeclaration = symbol.ValueDeclaration
 	result.Members = maps.Clone(symbol.Members)
 	result.Exports = maps.Clone(symbol.Exports)
 	result.Parent = symbol.Parent
-	links := c.exportTypeLinks.Get(result)
-	links.target = symbol
-	links.originatingImport = referenceParent
+	c.exportTypeLinks.Get(result).target = symbol
+	return result
+}
+
+func (c *Checker) cloneTypeAsModuleType(symbol *ast.Symbol, moduleType *Type, referenceParent *ast.Node) *ast.Symbol {
+	result := c.cloneModuleSymbol(symbol)
+	c.exportTypeLinks.Get(result).originatingImport = referenceParent
 	resolvedModuleType := c.resolveStructuredTypeMembers(moduleType)
 	c.valueSymbolLinks.Get(result).resolvedType = c.newAnonymousType(result, resolvedModuleType.members, nil, nil, resolvedModuleType.indexInfos)
 	return result
@@ -17266,6 +17327,17 @@ func (c *Checker) getTypeOfFuncClassEnumModule(symbol *ast.Symbol) *Type {
 }
 
 func (c *Checker) getTypeOfFuncClassEnumModuleWorker(symbol *ast.Symbol) *Type {
+	if symbol.Flags&ast.SymbolFlagsModule != 0 && c.exportTypeLinks.Has(symbol) {
+		links := c.exportTypeLinks.Get(symbol)
+		if links.deferredDeclaration != nil {
+			t := c.getTypeOfSymbol(links.target)
+			deferredType := c.getDeferredModuleType(t)
+			if deferredType != t {
+				deferredType.symbol = c.getSymbolOfDeclaration(links.deferredDeclaration)
+			}
+			return deferredType
+		}
+	}
 	if symbol.Flags&ast.SymbolFlagsModule != 0 && isShorthandAmbientModuleSymbol(symbol) {
 		return c.anyType
 	} else if symbol.Flags&ast.SymbolFlagsValueModule != 0 && symbol.ValueDeclaration != nil &&

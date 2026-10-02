@@ -587,6 +587,11 @@ export class RemoteNode extends RemoteNodeBase implements Node {
 
     get phaseModifier(): SyntaxKind | undefined {
         switch (this.kind) {
+            case SyntaxKind.ExportDeclaration: {
+                const idx = (this.data >> 24) & 0x3;
+                if (idx === 0) return undefined;
+                return idx === 1 ? SyntaxKind.TypeKeyword : idx === 2 ? SyntaxKind.DeferKeyword : undefined;
+            }
             case SyntaxKind.ImportClause: {
                 const idx = (this.data >> 24) & 0x3;
                 if (idx === 0) return undefined;

@@ -347,6 +347,18 @@ func isTypeAssertion(node *ast.Node) bool {
 	return ast.IsAssertionExpression(ast.SkipParentheses(node))
 }
 
+func isDeferredNamespaceDeclaration(node *ast.Node) bool {
+	if node != nil {
+		switch node.Kind {
+		case ast.KindNamespaceImport:
+			return node.Parent.AsImportClause().PhaseModifier == ast.KindDeferKeyword
+		case ast.KindNamespaceExport:
+			return node.Parent.AsExportDeclaration().PhaseModifier == ast.KindDeferKeyword
+		}
+	}
+	return false
+}
+
 func createSymbolTable(symbols []*ast.Symbol) ast.SymbolTable {
 	if len(symbols) == 0 {
 		return nil

@@ -2995,7 +2995,7 @@ func isTypeOnlyExportDeclaration(node *Node) bool {
 		return node.IsTypeOnly() || node.Parent.Parent.IsTypeOnly()
 	case KindExportDeclaration:
 		d := node.AsExportDeclaration()
-		return d.IsTypeOnly && d.ModuleSpecifier != nil && d.ExportClause == nil
+		return d.IsTypeOnly() && d.ModuleSpecifier != nil && d.ExportClause == nil
 	case KindNamespaceExport:
 		return node.Parent.IsTypeOnly()
 	}
@@ -3609,7 +3609,7 @@ func ReplaceModifiers(factory *NodeFactory, node *Node, modifierArray *ModifierL
 		return factory.UpdateExportDeclaration(
 			node.AsExportDeclaration(),
 			modifierArray,
-			node.IsTypeOnly(),
+			node.AsExportDeclaration().PhaseModifier,
 			node.AsExportDeclaration().ExportClause,
 			node.ModuleSpecifier(),
 			node.AsExportDeclaration().Attributes,

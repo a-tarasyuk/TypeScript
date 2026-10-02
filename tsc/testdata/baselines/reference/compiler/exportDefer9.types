@@ -1,0 +1,162 @@
+//// [tests/cases/compiler/exportDefer9.ts] ////
+
+=== a.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+export interface then {
+    a: number;
+>a : number
+}
+export type * from "./b.js";
+
+=== b.ts ===
+export const b = 1;
+>b : 1
+>1 : 1
+
+=== c.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+export interface then {
+    a: number;
+>a : number
+}
+
+=== d.ts ===
+import defer * as a from "./a.js";
+>a : typeof a
+
+import defer * as b from "./c.js";
+>b : typeof b
+
+export type I = a.then;
+>I : a.then
+>a : any
+
+export type J = b.then;
+>J : b.then
+>b : any
+
+export const c = a;
+>c : typeof a
+>a : typeof a
+
+export const d = b;
+>d : typeof b
+>b : typeof b
+
+export const e = import.defer("./a.js");
+>e : Promise<{ readonly a: 1; }>
+>import.defer("./a.js") : Promise<{ readonly a: 1; }>
+>defer : any
+>"./a.js" : "./a.js"
+
+export const f = import.defer("./c.js");
+>f : Promise<typeof b>
+>import.defer("./c.js") : Promise<typeof b>
+>defer : any
+>"./c.js" : "./c.js"
+
+const g: number = a.a + b.a;
+>g : number
+>a.a + b.a : number
+>a.a : 1
+>a : typeof a
+>a : 1
+>b.a : 1
+>b : typeof b
+>a : 1
+
+const h: keyof typeof a = "then";
+>h : "a"
+>a : typeof a
+>"then" : "then"
+
+const i: keyof typeof a = "b";
+>i : "a"
+>a : typeof a
+>"b" : "b"
+
+const j: keyof typeof b = "then";
+>j : "a"
+>b : typeof b
+>"then" : "then"
+
+a.then();
+>a.then() : any
+>a.then : any
+>a : typeof a
+>then : any
+
+a.b;
+>a.b : any
+>a : typeof a
+>b : any
+
+b.then();
+>b.then() : any
+>b.then : any
+>b : typeof b
+>then : any
+
+import.defer("./a.js").then(a => {
+>import.defer("./a.js").then(a => {    const b: number = a.a;    const c: keyof typeof a = "b";    a.then();    a.b;}) : Promise<void>
+>import.defer("./a.js").then : <TResult1 = { readonly a: 1; }, TResult2 = never>(onfulfilled?: ((value: { readonly a: 1; }) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>import.defer("./a.js") : Promise<{ readonly a: 1; }>
+>defer : any
+>"./a.js" : "./a.js"
+>then : <TResult1 = { readonly a: 1; }, TResult2 = never>(onfulfilled?: ((value: { readonly a: 1; }) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>a => {    const b: number = a.a;    const c: keyof typeof a = "b";    a.then();    a.b;} : (a: { readonly a: 1; }) => void
+>a : { readonly a: 1; }
+
+    const b: number = a.a;
+>b : number
+>a.a : 1
+>a : { readonly a: 1; }
+>a : 1
+
+    const c: keyof typeof a = "b";
+>c : "a"
+>a : { readonly a: 1; }
+>"b" : "b"
+
+    a.then();
+>a.then() : any
+>a.then : any
+>a : { readonly a: 1; }
+>then : any
+
+    a.b;
+>a.b : any
+>a : { readonly a: 1; }
+>b : any
+
+});
+import.defer("./c.js").then(a => {
+>import.defer("./c.js").then(a => {    const b: number = a.a;    a.then();}) : Promise<void>
+>import.defer("./c.js").then : <TResult1 = typeof b, TResult2 = never>(onfulfilled?: ((value: typeof b) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>import.defer("./c.js") : Promise<typeof b>
+>defer : any
+>"./c.js" : "./c.js"
+>then : <TResult1 = typeof b, TResult2 = never>(onfulfilled?: ((value: typeof b) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>a => {    const b: number = a.a;    a.then();} : (a: typeof b) => void
+>a : typeof import("./c.js")
+
+    const b: number = a.a;
+>b : number
+>a.a : 1
+>a : typeof import("./c.js")
+>a : 1
+
+    a.then();
+>a.then() : any
+>a.then : any
+>a : typeof import("./c.js")
+>then : any
+
+});
+

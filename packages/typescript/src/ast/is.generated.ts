@@ -88,6 +88,7 @@ import type {
     ExportAssignment,
     ExportDeclaration,
     ExportKeyword,
+    ExportPhaseModifierSyntaxKind,
     ExportSpecifier,
     ExpressionStatement,
     ExpressionWithTypeArguments,
@@ -2775,6 +2776,11 @@ export function isImportPhaseModifierKind(kind: SyntaxKind): kind is ImportPhase
     return kind === SyntaxKind.TypeKeyword
         || kind === SyntaxKind.DeferKeyword
         || kind === SyntaxKind.SourceKeyword;
+}
+
+export function isExportPhaseModifierKind(kind: SyntaxKind): kind is ExportPhaseModifierSyntaxKind {
+    return kind === SyntaxKind.TypeKeyword
+        || kind === SyntaxKind.DeferKeyword;
 }
 
 export function isPostfixUnaryOperator(kind: SyntaxKind): kind is PostfixUnaryOperator {

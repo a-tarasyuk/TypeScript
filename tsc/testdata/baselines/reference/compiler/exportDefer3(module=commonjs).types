@@ -1,0 +1,21 @@
+//// [tests/cases/compiler/exportDefer3.ts] ////
+
+=== a.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+=== b.ts ===
+export defer { a } from "./a.js";
+>a : 1
+
+export defer * as b from "./a.js";
+>b : typeof import("./a.js")
+
+=== c.js ===
+export defer { a } from "./a.js";
+>a : 1
+
+export defer * as b from "./a.js";
+>b : typeof import("./a.js")
+

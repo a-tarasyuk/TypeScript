@@ -56,6 +56,7 @@ import type {
     ExclamationToken,
     ExportAssignment,
     ExportDeclaration,
+    ExportPhaseModifierSyntaxKind,
     ExportSpecifier,
     Expression,
     ExpressionStatement,
@@ -1112,7 +1113,7 @@ function cloneNodeData(node: Node): any {
         case SyntaxKind.ImportEqualsDeclaration:
             return { modifiers: n.modifiers, isTypeOnly: n.isTypeOnly, name: n.name, moduleReference: n.moduleReference };
         case SyntaxKind.ExportDeclaration:
-            return { modifiers: n.modifiers, isTypeOnly: n.isTypeOnly, exportClause: n.exportClause, moduleSpecifier: n.moduleSpecifier, attributes: n.attributes };
+            return { modifiers: n.modifiers, phaseModifier: n.phaseModifier, exportClause: n.exportClause, moduleSpecifier: n.moduleSpecifier, attributes: n.attributes };
         case SyntaxKind.ImportType:
             return { isTypeOf: n.isTypeOf, argument: n.argument, attributes: n.attributes, qualifier: n.qualifier, typeArguments: n.typeArguments };
         case SyntaxKind.ImportClause:
@@ -5233,10 +5234,10 @@ export function createImportEqualsDeclaration(modifiers: readonly ModifierLike[]
     }) as unknown as ImportEqualsDeclaration;
 }
 
-export function createExportDeclaration(modifiers?: readonly ModifierLike[], isTypeOnly?: boolean, exportClause?: NamedExportBindings, moduleSpecifier?: Expression, attributes?: ImportAttributes): ExportDeclaration {
+export function createExportDeclaration(modifiers?: readonly ModifierLike[], phaseModifier?: ExportPhaseModifierSyntaxKind, exportClause?: NamedExportBindings, moduleSpecifier?: Expression, attributes?: ImportAttributes): ExportDeclaration {
     return new NodeObject(SyntaxKind.ExportDeclaration, {
         modifiers: modifiers ? createNodeArray(modifiers) : undefined,
-        isTypeOnly,
+        phaseModifier,
         exportClause,
         moduleSpecifier,
         attributes,
@@ -5995,7 +5996,7 @@ export function updateImportEqualsDeclaration(node: ImportEqualsDeclaration, mod
 }
 
 export function updateExportDeclaration(node: ExportDeclaration, modifiers?: readonly ModifierLike[], exportClause?: NamedExportBindings, moduleSpecifier?: Expression, attributes?: ImportAttributes): ExportDeclaration {
-    return node.modifiers !== modifiers || node.exportClause !== exportClause || node.moduleSpecifier !== moduleSpecifier || node.attributes !== attributes ? createExportDeclaration(modifiers, node.isTypeOnly, exportClause, moduleSpecifier, attributes) : node;
+    return node.modifiers !== modifiers || node.exportClause !== exportClause || node.moduleSpecifier !== moduleSpecifier || node.attributes !== attributes ? createExportDeclaration(modifiers, node.phaseModifier, exportClause, moduleSpecifier, attributes) : node;
 }
 
 export function updateImportTypeNode(node: ImportTypeNode, argument: TypeNode, attributes?: ImportAttributes, qualifier?: EntityName, typeArguments?: readonly TypeNode[]): ImportTypeNode {

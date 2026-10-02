@@ -1,0 +1,92 @@
+//// [tests/cases/compiler/exportDefer7.ts] ////
+
+=== a.d.ts ===
+export let a: number;
+>a : number
+
+export function then(): number;
+>then : () => number
+
+export interface I {
+    a: number;
+>a : number
+}
+
+=== b.d.ts ===
+export defer * as b from "./a.js";
+>b : typeof b
+
+export defer { then as c } from "./a.js";
+>then : () => number
+>c : () => number
+
+=== c.d.ts ===
+import defer * as a from "./a.js";
+>a : typeof a
+
+export { a };
+>a : typeof a
+
+export * from "./b.js";
+export declare const d: typeof a;
+>d : typeof a
+>a : typeof a
+
+=== d.ts ===
+import * as a from "./a.js";
+>a : typeof a
+
+import { a as b, b as c, c as d, d as e } from "./c.js";
+>a : typeof a
+>b : typeof a
+>b : typeof import("./b.js").b
+>c : typeof import("./b.js").b
+>c : () => number
+>d : () => number
+>d : typeof a
+>e : typeof a
+
+const f: number = a.then() + d() + b.a + c.a + e.a;
+>f : number
+>a.then() + d() + b.a + c.a + e.a : number
+>a.then() + d() + b.a + c.a : number
+>a.then() + d() + b.a : number
+>a.then() + d() : number
+>a.then() : number
+>a.then : () => number
+>a : typeof a
+>then : () => number
+>d() : number
+>d : () => number
+>b.a : number
+>b : typeof a
+>a : number
+>c.a : number
+>c : typeof import("./b.js").b
+>a : number
+>e.a : number
+>e : typeof a
+>a : number
+
+type I = c.I;
+>I : a.I
+>c : any
+
+b.then();
+>b.then() : any
+>b.then : any
+>b : typeof a
+>then : any
+
+c.then();
+>c.then() : any
+>c.then : any
+>c : typeof import("./b.js").b
+>then : any
+
+e.then();
+>e.then() : any
+>e.then : any
+>e : typeof a
+>then : any
+
