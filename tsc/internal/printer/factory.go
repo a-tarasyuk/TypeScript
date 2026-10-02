@@ -813,7 +813,7 @@ func (f *NodeFactory) NewExportDefault(expression *ast.Expression) *ast.Statemen
 func (f *NodeFactory) NewExternalModuleExport(name *ast.IdentifierNode) *ast.Statement {
 	specifier := f.NewExportSpecifier(false, nil, name)
 	namedExports := f.NewNamedExports(f.NewNodeList([]*ast.Node{specifier}))
-	return f.NewExportDeclaration(nil, false, namedExports, nil, nil)
+	return f.NewExportDeclaration(nil, ast.KindUnknown, namedExports, nil, nil)
 }
 
 // ES2018 Helpers

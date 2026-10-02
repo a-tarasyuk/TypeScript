@@ -140,8 +140,8 @@ func (tx *usingDeclarationTransformer) visitSourceFile(node *ast.SourceFile) *as
 			topLevelStatements = append(
 				topLevelStatements,
 				tx.Factory().NewExportDeclaration(
-					nil,   /*modifiers*/
-					false, /*isTypeOnly*/
+					nil,             /*modifiers*/
+					ast.KindUnknown, /*phaseModifier*/
 					tx.Factory().NewNamedExports(
 						tx.Factory().NewNodeList(
 							exportSpecifiers,

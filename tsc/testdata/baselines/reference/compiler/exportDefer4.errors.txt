@@ -1,0 +1,31 @@
+c.js(2,3): error TS2339: Property 'toUpperCase' does not exist on type '1'.
+c.js(3,3): error TS2540: Cannot assign to 'a' because it is a read-only property.
+c.js(4,3): error TS2339: Property 'c' does not exist on type 'typeof b'.
+c.js(5,3): error TS2339: Property 'then' does not exist on type 'typeof b'.
+
+
+==== a.js (0 errors) ====
+    export const a = 1;
+    export function then() {
+        return a;
+    }
+    
+==== b.js (0 errors) ====
+    export defer { a } from "./a.js";
+    export defer * as b from "./a.js";
+    
+==== c.js (4 errors) ====
+    import { a, b } from "./b.js";
+    a.toUpperCase();
+      ~~~~~~~~~~~
+!!! error TS2339: Property 'toUpperCase' does not exist on type '1'.
+    b.a = "a";
+      ~
+!!! error TS2540: Cannot assign to 'a' because it is a read-only property.
+    b.c();
+      ~
+!!! error TS2339: Property 'c' does not exist on type 'typeof b'.
+    b.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof b'.
+    

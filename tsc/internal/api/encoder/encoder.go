@@ -233,7 +233,7 @@ const (
 // | `ImportClause`               | Bit 0: `isTypeOnly`, Bit 1: `isDefer` |                                |
 // | `ExportSpecifier`            | Bit 0: `isTypeOnly`                   |                                |
 // | `ImportEqualsDeclaration`    | Bit 0: `isTypeOnly`                   |                                |
-// | `ExportDeclaration`          | Bit 0: `isTypeOnly`                   |                                |
+// | `ExportDeclaration`          | Bit 0: `isTypeOnly`, Bit 1: `isDefer` |                                |
 // | `ImportTypeNode`             | Bit 0: `isTypeOf`                     |                                |
 // | `ExportAssignment`           | Bit 0: `isExportEquals`               |                                |
 // | `Block`                      | Bit 0: `multiline`                    |                                |

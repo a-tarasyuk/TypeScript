@@ -1,0 +1,75 @@
+d.ts(10,7): error TS2322: Type '"then"' is not assignable to type '"a"'.
+d.ts(11,7): error TS2322: Type '"b"' is not assignable to type '"a"'.
+d.ts(12,7): error TS2322: Type '"then"' is not assignable to type '"a"'.
+d.ts(13,3): error TS2339: Property 'then' does not exist on type 'typeof a'.
+d.ts(14,3): error TS2339: Property 'b' does not exist on type 'typeof a'.
+d.ts(15,3): error TS2339: Property 'then' does not exist on type 'typeof import("c")'.
+d.ts(18,11): error TS2322: Type '"b"' is not assignable to type '"a"'.
+d.ts(19,7): error TS2339: Property 'then' does not exist on type '{ readonly a: 1; }'.
+d.ts(20,7): error TS2339: Property 'b' does not exist on type '{ readonly a: 1; }'.
+d.ts(24,7): error TS2339: Property 'then' does not exist on type 'typeof import("c")'.
+
+
+==== a.ts (0 errors) ====
+    export const a = 1;
+    export interface then {
+        a: number;
+    }
+    export type * from "./b.js";
+    
+==== b.ts (0 errors) ====
+    export const b = 1;
+    
+==== c.ts (0 errors) ====
+    export const a = 1;
+    export interface then {
+        a: number;
+    }
+    
+==== d.ts (10 errors) ====
+    import defer * as a from "./a.js";
+    import defer * as b from "./c.js";
+    export type I = a.then;
+    export type J = b.then;
+    export const c = a;
+    export const d = b;
+    export const e = import.defer("./a.js");
+    export const f = import.defer("./c.js");
+    const g: number = a.a + b.a;
+    const h: keyof typeof a = "then";
+          ~
+!!! error TS2322: Type '"then"' is not assignable to type '"a"'.
+    const i: keyof typeof a = "b";
+          ~
+!!! error TS2322: Type '"b"' is not assignable to type '"a"'.
+    const j: keyof typeof b = "then";
+          ~
+!!! error TS2322: Type '"then"' is not assignable to type '"a"'.
+    a.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof a'.
+    a.b;
+      ~
+!!! error TS2339: Property 'b' does not exist on type 'typeof a'.
+    b.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof import("c")'.
+    import.defer("./a.js").then(a => {
+        const b: number = a.a;
+        const c: keyof typeof a = "b";
+              ~
+!!! error TS2322: Type '"b"' is not assignable to type '"a"'.
+        a.then();
+          ~~~~
+!!! error TS2339: Property 'then' does not exist on type '{ readonly a: 1; }'.
+        a.b;
+          ~
+!!! error TS2339: Property 'b' does not exist on type '{ readonly a: 1; }'.
+    });
+    import.defer("./c.js").then(a => {
+        const b: number = a.a;
+        a.then();
+          ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof import("c")'.
+    });
+    

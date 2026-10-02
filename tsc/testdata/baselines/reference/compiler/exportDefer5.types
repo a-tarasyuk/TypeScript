@@ -1,0 +1,14 @@
+//// [tests/cases/compiler/exportDefer5.ts] ////
+
+=== a.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+=== b.ts ===
+export defer { a } from "./a.ts";
+>a : 1
+
+export defer * as b from "./a.ts";
+>b : typeof import("./a.ts")
+

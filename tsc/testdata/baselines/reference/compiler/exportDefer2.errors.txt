@@ -1,0 +1,20 @@
+b.ts(2,1): error TS18116: Deferred re-exports must specify a module specifier.
+b.ts(3,30): error TS2307: Cannot find module './c.js' or its corresponding type declarations.
+b.ts(4,16): error TS2305: Module '"./a.js"' has no exported member 'c'.
+
+
+==== a.ts (0 errors) ====
+    export const a = 1;
+    
+==== b.ts (3 errors) ====
+    const a = 0;
+    export defer { a };
+    ~~~~~~~~~~~~~~~~~~~
+!!! error TS18116: Deferred re-exports must specify a module specifier.
+    export defer { a as b } from "./c.js";
+                                 ~~~~~~~~
+!!! error TS2307: Cannot find module './c.js' or its corresponding type declarations.
+    export defer { c } from "./a.js";
+                   ~
+!!! error TS2305: Module '"./a.js"' has no exported member 'c'.
+    

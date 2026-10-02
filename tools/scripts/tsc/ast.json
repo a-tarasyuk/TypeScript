@@ -682,6 +682,10 @@
                 "DeferKeyword",
                 "SourceKeyword"
             ],
+            "ExportPhaseModifierSyntaxKind": [
+                "TypeKeyword",
+                "DeferKeyword"
+            ],
             "PostfixUnaryOperator": [
                 "PlusPlusToken",
                 "MinusMinusToken"
@@ -4868,8 +4872,9 @@
                         "inherited": true
                     },
                     {
-                        "name": "IsTypeOnly",
-                        "type": "bool"
+                        "name": "PhaseModifier",
+                        "type": "ExportPhaseModifierSyntaxKind",
+                        "optional": true
                     },
                     {
                         "name": "ExportClause",

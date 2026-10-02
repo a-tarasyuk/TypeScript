@@ -1,0 +1,58 @@
+//// [tests/cases/compiler/exportDefer8.ts] ////
+
+=== a.ts ===
+export const b = 1;
+>b : 1
+>1 : 1
+
+export function then() {
+>then : () => number
+
+    return b;
+>b : 1
+}
+export defer * as a from "./a.js";
+>a : typeof a
+
+=== b.ts ===
+import { a } from "./a.js";
+>a : typeof a.a
+
+export const c = a;
+>c : typeof a.a
+>a : typeof a.a
+
+export function f() {
+>f : () => typeof a.a
+
+    return a.a;
+>a.a : typeof a.a
+>a : typeof a.a
+>a : typeof a.a
+}
+const d: number = a.a.a.b;
+>d : number
+>a.a.a.b : 1
+>a.a.a : typeof a.a
+>a.a : typeof a.a
+>a : typeof a.a
+>a : typeof a.a
+>a : typeof a.a
+>b : 1
+
+a.then();
+>a.then() : any
+>a.then : any
+>a : typeof a.a
+>then : any
+
+a.a.a.then();
+>a.a.a.then() : any
+>a.a.a.then : any
+>a.a.a : typeof a.a
+>a.a : typeof a.a
+>a : typeof a.a
+>a : typeof a.a
+>a : typeof a.a
+>then : any
+

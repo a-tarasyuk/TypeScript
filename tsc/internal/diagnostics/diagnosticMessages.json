@@ -8915,5 +8915,17 @@
     "Source phase imports are not allowed on statements that compile to CommonJS 'require' calls.": {
         "category": "Error",
         "code": 18115
+    },
+    "Deferred re-exports must specify a module specifier.": {
+        "category": "Error",
+        "code": 18116
+    },
+    "Wildcard re-exports are not allowed in a deferred export.": {
+        "category": "Error",
+        "code": 18117
+    },
+    "Deferred exports are only supported when the '--module' flag is set to 'esnext' or 'preserve'.": {
+        "category": "Error",
+        "code": 18118
     }
 }

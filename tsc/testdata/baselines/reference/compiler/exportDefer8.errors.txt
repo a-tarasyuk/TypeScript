@@ -1,0 +1,25 @@
+b.ts(7,3): error TS2339: Property 'then' does not exist on type 'typeof a'.
+b.ts(8,7): error TS2339: Property 'then' does not exist on type 'typeof a'.
+
+
+==== a.ts (0 errors) ====
+    export const b = 1;
+    export function then() {
+        return b;
+    }
+    export defer * as a from "./a.js";
+    
+==== b.ts (2 errors) ====
+    import { a } from "./a.js";
+    export const c = a;
+    export function f() {
+        return a.a;
+    }
+    const d: number = a.a.a.b;
+    a.then();
+      ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof a'.
+    a.a.a.then();
+          ~~~~
+!!! error TS2339: Property 'then' does not exist on type 'typeof a'.
+    

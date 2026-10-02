@@ -8146,25 +8146,25 @@ type ExportDeclaration struct {
 	DeclarationBase
 	ModifiersBase
 	CompositeBase
-	IsTypeOnly      bool
-	ExportClause    *NamedExportBindings  // Optional
-	ModuleSpecifier *Expression           // Optional
-	Attributes      *ImportAttributesNode // Optional
+	PhaseModifier   ExportPhaseModifierSyntaxKind // Optional
+	ExportClause    *NamedExportBindings          // Optional
+	ModuleSpecifier *Expression                   // Optional
+	Attributes      *ImportAttributesNode         // Optional
 }
 
-func (f *NodeFactory) NewExportDeclaration(modifiers *ModifierList, isTypeOnly bool, exportClause *NamedExportBindings, moduleSpecifier *Expression, attributes *ImportAttributesNode) *Node {
+func (f *NodeFactory) NewExportDeclaration(modifiers *ModifierList, phaseModifier ExportPhaseModifierSyntaxKind, exportClause *NamedExportBindings, moduleSpecifier *Expression, attributes *ImportAttributesNode) *Node {
 	data := &ExportDeclaration{}
 	data.modifiers = modifiers
-	data.IsTypeOnly = isTypeOnly
+	data.PhaseModifier = phaseModifier
 	data.ExportClause = exportClause
 	data.ModuleSpecifier = moduleSpecifier
 	data.Attributes = attributes
 	return f.newNode(KindExportDeclaration, data)
 }
 
-func (f *NodeFactory) UpdateExportDeclaration(node *ExportDeclaration, modifiers *ModifierList, isTypeOnly bool, exportClause *NamedExportBindings, moduleSpecifier *Expression, attributes *ImportAttributesNode) *Node {
-	if modifiers != node.modifiers || isTypeOnly != node.IsTypeOnly || exportClause != node.ExportClause || moduleSpecifier != node.ModuleSpecifier || attributes != node.Attributes {
-		return updateNode(f.NewExportDeclaration(modifiers, isTypeOnly, exportClause, moduleSpecifier, attributes), node.AsNode(), f.hooks)
+func (f *NodeFactory) UpdateExportDeclaration(node *ExportDeclaration, modifiers *ModifierList, phaseModifier ExportPhaseModifierSyntaxKind, exportClause *NamedExportBindings, moduleSpecifier *Expression, attributes *ImportAttributesNode) *Node {
+	if modifiers != node.modifiers || phaseModifier != node.PhaseModifier || exportClause != node.ExportClause || moduleSpecifier != node.ModuleSpecifier || attributes != node.Attributes {
+		return updateNode(f.NewExportDeclaration(modifiers, phaseModifier, exportClause, moduleSpecifier, attributes), node.AsNode(), f.hooks)
 	}
 	return node.AsNode()
 }
@@ -8177,11 +8177,11 @@ func (node *ExportDeclaration) ForEachChild(v Visitor) bool {
 }
 
 func (node *ExportDeclaration) VisitEachChild(v *NodeVisitor) *Node {
-	return v.Factory.UpdateExportDeclaration(node, v.visitModifiers(node.modifiers), node.IsTypeOnly, v.visitNode(node.ExportClause), v.visitNode(node.ModuleSpecifier), v.visitNode(node.Attributes))
+	return v.Factory.UpdateExportDeclaration(node, v.visitModifiers(node.modifiers), node.PhaseModifier, v.visitNode(node.ExportClause), v.visitNode(node.ModuleSpecifier), v.visitNode(node.Attributes))
 }
 
 func (node *ExportDeclaration) Clone(f NodeFactoryCoercible) *Node {
-	return cloneNode(f.AsNodeFactory().NewExportDeclaration(node.Modifiers(), node.IsTypeOnly, node.ExportClause, node.ModuleSpecifier, node.Attributes), node.AsNode(), f.AsNodeFactory().hooks)
+	return cloneNode(f.AsNodeFactory().NewExportDeclaration(node.Modifiers(), node.PhaseModifier, node.ExportClause, node.ModuleSpecifier, node.Attributes), node.AsNode(), f.AsNodeFactory().hooks)
 }
 
 func IsExportDeclaration(node *Node) bool {
@@ -9878,6 +9878,14 @@ func IsJSDocNodeKind(kind Kind) bool {
 func IsImportPhaseModifierKind(kind Kind) bool {
 	switch kind {
 	case KindTypeKeyword, KindDeferKeyword, KindSourceKeyword:
+		return true
+	}
+	return false
+}
+
+func IsExportPhaseModifierKind(kind Kind) bool {
+	switch kind {
+	case KindTypeKeyword, KindDeferKeyword:
 		return true
 	}
 	return false

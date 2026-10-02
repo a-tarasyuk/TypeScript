@@ -472,7 +472,7 @@ func (b *NodeBuilderImpl) expandModuleDecl(symbol *ast.Symbol) *ast.Node {
 					propertyName = b.f.NewIdentifier(targetName)
 				}
 				stmt := b.f.NewExportDeclaration(
-					nil, false,
+					nil, ast.KindUnknown,
 					b.f.NewNamedExports(b.f.NewNodeList([]*ast.Node{
 						b.f.NewExportSpecifier(false, propertyName, b.f.NewIdentifier(m.Name)),
 					})),

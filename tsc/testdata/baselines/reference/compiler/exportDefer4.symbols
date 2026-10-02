@@ -1,0 +1,39 @@
+//// [tests/cases/compiler/exportDefer4.ts] ////
+
+=== a.js ===
+export const a = 1;
+>a : Symbol(a, Decl(a.js, 0, 12))
+
+export function then() {
+>then : Symbol(then, Decl(a.js, 0, 19))
+
+    return a;
+>a : Symbol(a, Decl(a.js, 0, 12))
+}
+
+=== b.js ===
+export defer { a } from "./a.js";
+>a : Symbol(a, Decl(b.js, 0, 14))
+
+export defer * as b from "./a.js";
+>b : Symbol(b, Decl(b.js, 1, 12))
+
+=== c.js ===
+import { a, b } from "./b.js";
+>a : Symbol(a, Decl(c.js, 0, 8))
+>b : Symbol(b, Decl(c.js, 0, 11))
+
+a.toUpperCase();
+>a : Symbol(a, Decl(c.js, 0, 8))
+
+b.a = "a";
+>b.a : Symbol(a, Decl(a.js, 0, 12))
+>b : Symbol(b, Decl(c.js, 0, 11))
+>a : Symbol(a, Decl(a.js, 0, 12))
+
+b.c();
+>b : Symbol(b, Decl(c.js, 0, 11))
+
+b.then();
+>b : Symbol(b, Decl(c.js, 0, 11))
+

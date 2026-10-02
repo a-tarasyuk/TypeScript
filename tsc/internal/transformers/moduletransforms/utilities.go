@@ -35,8 +35,8 @@ func rewriteModuleSpecifier(emitContext *printer.EmitContext, node *ast.Expressi
 
 func createEmptyImports(factory *printer.NodeFactory) *ast.Statement {
 	return factory.NewExportDeclaration(
-		nil,   /*modifiers*/
-		false, /*isTypeOnly*/
+		nil,             /*modifiers*/
+		ast.KindUnknown, /*phaseModifier*/
 		factory.NewNamedExports(factory.NewNodeList(nil)),
 		nil, /*moduleSpecifier*/
 		nil, /*attributes*/

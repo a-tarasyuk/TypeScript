@@ -1,0 +1,228 @@
+//// [tests/cases/compiler/exportDefer6.ts] ////
+
+=== a.ts ===
+export let a = 1;
+>a : number
+>1 : 1
+
+export function then(): number {
+>then : () => number
+
+    return a;
+>a : number
+}
+export interface then {
+    a: number;
+>a : number
+}
+export interface I {
+    a: number;
+>a : number
+}
+export type * from "./e.js";
+
+=== b.ts ===
+export defer * as b from "./a.js";
+>b : typeof b
+
+export defer { then as c } from "./a.js";
+>then : () => number
+>c : () => number
+
+export defer * as d from "./f.js";
+>d : typeof d
+
+=== c.ts ===
+import defer * as a from "./a.js";
+>a : typeof a
+
+export { a };
+>a : typeof a
+
+export const d = a;
+>d : typeof a
+>a : typeof a
+
+export * from "./b.js";
+export { b as e } from "./b.js";
+>b : typeof import("./b.js").b
+>e : typeof import("./b.js").b
+
+export type I = a.I;
+>I : a.I
+>a : any
+
+export type J = a.then;
+>J : a.then
+>a : any
+
+export const f = import.defer("./a.js");
+>f : Promise<{ a: number; }>
+>import.defer("./a.js") : Promise<{ a: number; }>
+>defer : any
+>"./a.js" : "./a.js"
+
+export const g = (await import("./b.js")).b;
+>g : typeof import("./b.js").b
+>(await import("./b.js")).b : typeof import("./b.js").b
+>(await import("./b.js")) : typeof import("./b.js")
+>await import("./b.js") : typeof import("./b.js")
+>import("./b.js") : Promise<typeof import("./b.js")>
+>"./b.js" : "./b.js"
+>b : typeof import("./b.js").b
+
+=== d.ts ===
+import * as a from "./a.js";
+>a : typeof a
+
+import { a as b, b as c, c as d, d as e, e as f } from "./c.js";
+>a : typeof a
+>b : typeof a
+>b : typeof import("./b.js").b
+>c : typeof import("./b.js").b
+>c : () => number
+>d : () => number
+>d : typeof a
+>e : typeof a
+>e : typeof import("./b.js").b
+>f : typeof import("./b.js").b
+
+export const g: number = a.then() + d() + b.a + c.a + e.a + f.a;
+>g : number
+>a.then() + d() + b.a + c.a + e.a + f.a : number
+>a.then() + d() + b.a + c.a + e.a : number
+>a.then() + d() + b.a + c.a : number
+>a.then() + d() + b.a : number
+>a.then() + d() : number
+>a.then() : number
+>a.then : () => number
+>a : typeof a
+>then : () => number
+>d() : number
+>d : () => number
+>b.a : number
+>b : typeof a
+>a : number
+>c.a : number
+>c : typeof import("./b.js").b
+>a : number
+>e.a : number
+>e : typeof a
+>a : number
+>f.a : number
+>f : typeof import("./b.js").b
+>a : number
+
+export type I = c.I;
+>I : a.I
+>c : any
+
+export type J = c.then;
+>J : d
+>c : any
+
+b.then();
+>b.then() : any
+>b.then : any
+>b : typeof a
+>then : any
+
+c.then();
+>c.then() : any
+>c.then : any
+>c : typeof import("./b.js").b
+>then : any
+
+e.then();
+>e.then() : any
+>e.then : any
+>e : typeof a
+>then : any
+
+f.then();
+>f.then() : any
+>f.then : any
+>f : typeof import("./b.js").b
+>then : any
+
+b["then"]();
+>b["then"]() : any
+>b["then"] : any
+>b : typeof a
+>"then" : "then"
+
+type K = typeof c.then;
+>K : any
+>c.then : any
+>c : typeof import("./b.js").b
+>then : any
+
+const h: keyof typeof c = "then";
+>h : "a"
+>c : typeof import("./b.js").b
+>"then" : "then"
+
+const i: typeof a = c;
+>i : typeof a
+>a : typeof a
+>c : typeof import("./b.js").b
+
+import { d as j } from "./b.js";
+>d : typeof import("./b.js").d
+>j : typeof import("./b.js").d
+
+const k: keyof typeof j = "then";
+>k : "a"
+>j : typeof import("./b.js").d
+>"then" : "then"
+
+type L = j.then;
+>L : d
+>j : any
+
+c.b;
+>c.b : any
+>c : typeof import("./b.js").b
+>b : any
+
+import.defer("./a.js").then(a => {
+>import.defer("./a.js").then(a => {    const b: number = a.a;    a.then();    a.b;}) : Promise<void>
+>import.defer("./a.js").then : <TResult1 = { a: number; }, TResult2 = never>(onfulfilled?: ((value: { a: number; }) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>import.defer("./a.js") : Promise<{ a: number; }>
+>defer : any
+>"./a.js" : "./a.js"
+>then : <TResult1 = { a: number; }, TResult2 = never>(onfulfilled?: ((value: { a: number; }) => TResult1 | PromiseLike<TResult1>) | null | undefined, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null | undefined) => Promise<TResult1 | TResult2>
+>a => {    const b: number = a.a;    a.then();    a.b;} : (a: { a: number; }) => void
+>a : { a: number; }
+
+    const b: number = a.a;
+>b : number
+>a.a : number
+>a : { a: number; }
+>a : number
+
+    a.then();
+>a.then() : any
+>a.then : any
+>a : { a: number; }
+>then : any
+
+    a.b;
+>a.b : any
+>a : { a: number; }
+>b : any
+
+});
+
+=== e.ts ===
+export const b = 1;
+>b : 1
+>1 : 1
+
+=== f.ts ===
+export const a = 1;
+>a : 1
+>1 : 1
+
+export type * from "./a.js";
+

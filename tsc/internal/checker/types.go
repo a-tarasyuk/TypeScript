@@ -236,8 +236,9 @@ type LateBoundLinks struct {
 // Links for export type symbols
 
 type ExportTypeLinks struct {
-	target            *ast.Symbol // Target symbol
-	originatingImport *ast.Node   // Import declaration which produced the symbol, present if the symbol is marked as uncallable but had call signatures in `resolveESModuleSymbol`
+	target              *ast.Symbol // Target symbol
+	originatingImport   *ast.Node   // Import declaration which produced the symbol, present if the symbol is marked as uncallable but had call signatures in `resolveESModuleSymbol`
+	deferredDeclaration *ast.Node
 }
 
 // Links for type aliases

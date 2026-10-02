@@ -372,6 +372,7 @@ export type JSDocNodeSyntaxKind =
     | SyntaxKind.JSDocSatisfiesTag
     | SyntaxKind.JSDocImportTag;
 export type ImportPhaseModifierSyntaxKind = SyntaxKind.TypeKeyword | SyntaxKind.DeferKeyword | SyntaxKind.SourceKeyword;
+export type ExportPhaseModifierSyntaxKind = SyntaxKind.TypeKeyword | SyntaxKind.DeferKeyword;
 export type PostfixUnaryOperator = SyntaxKind.PlusPlusToken | SyntaxKind.MinusMinusToken;
 export type PrefixUnaryOperator = SyntaxKind.PlusToken | SyntaxKind.MinusToken | SyntaxKind.TildeToken | SyntaxKind.ExclamationToken | SyntaxKind.PlusPlusToken | SyntaxKind.MinusMinusToken;
 export type AssignmentOperator = SyntaxKind.EqualsToken | CompoundAssignmentOperator;
@@ -1281,7 +1282,7 @@ export interface ImportEqualsDeclaration extends StatementBase, DeclarationBase,
 }
 export interface ExportDeclaration extends StatementBase, DeclarationBase, ModifiersBase {
     readonly kind: SyntaxKind.ExportDeclaration;
-    readonly isTypeOnly: boolean;
+    readonly phaseModifier?: ExportPhaseModifierSyntaxKind;
     readonly exportClause?: NamedExportBindings;
     readonly moduleSpecifier?: Expression;
     readonly attributes?: ImportAttributes;

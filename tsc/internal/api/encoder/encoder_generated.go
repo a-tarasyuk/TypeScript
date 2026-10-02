@@ -631,7 +631,14 @@ func getNodeCommonData(node *ast.Node) uint32 {
 		return uint32(boolToByte(n.IsTypeOnly)) << 24
 	case ast.KindExportDeclaration:
 		n := node.AsExportDeclaration()
-		return uint32(boolToByte(n.IsTypeOnly)) << 24
+		var phaseModifierIdx uint32
+		switch n.PhaseModifier {
+		case ast.KindTypeKeyword:
+			phaseModifierIdx = 1
+		case ast.KindDeferKeyword:
+			phaseModifierIdx = 2
+		}
+		return phaseModifierIdx << 24
 	case ast.KindImportType:
 		n := node.AsImportTypeNode()
 		return uint32(boolToByte(n.IsTypeOf)) << 24

@@ -1,0 +1,19 @@
+//// [tests/cases/compiler/exportDefer2.ts] ////
+
+=== a.ts ===
+export const a = 1;
+>a : Symbol(a, Decl(a.ts, 0, 12))
+
+=== b.ts ===
+const a = 0;
+>a : Symbol(a, Decl(b.ts, 0, 5))
+
+export defer { a };
+>a : Symbol(a, Decl(b.ts, 1, 14))
+
+export defer { a as b } from "./c.js";
+>b : Symbol(b, Decl(b.ts, 2, 14))
+
+export defer { c } from "./a.js";
+>c : Symbol(c, Decl(b.ts, 3, 14))
+

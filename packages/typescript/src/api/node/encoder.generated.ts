@@ -87,7 +87,7 @@ export function getNodeCommonData(node: Node): number {
         case SyntaxKind.ImportEqualsDeclaration:
             return ((node as ImportEqualsDeclaration).isTypeOnly ? 1 : 0) << 24;
         case SyntaxKind.ExportDeclaration:
-            return ((node as ExportDeclaration).isTypeOnly ? 1 : 0) << 24;
+            return ((node as ExportDeclaration).phaseModifier === SyntaxKind.TypeKeyword ? 1 : (node as ExportDeclaration).phaseModifier === SyntaxKind.DeferKeyword ? 2 : 0) << 24;
         case SyntaxKind.ImportType:
             return ((node as ImportTypeNode).isTypeOf ? 1 : 0) << 24;
         case SyntaxKind.ImportClause:

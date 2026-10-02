@@ -1,0 +1,51 @@
+//// [tests/cases/compiler/exportDefer8.ts] ////
+
+=== a.ts ===
+export const b = 1;
+>b : Symbol(b, Decl(a.ts, 0, 12))
+
+export function then() {
+>then : Symbol(then, Decl(a.ts, 0, 19))
+
+    return b;
+>b : Symbol(b, Decl(a.ts, 0, 12))
+}
+export defer * as a from "./a.js";
+>a : Symbol(a, Decl(a.ts, 4, 12))
+
+=== b.ts ===
+import { a } from "./a.js";
+>a : Symbol(a, Decl(b.ts, 0, 8))
+
+export const c = a;
+>c : Symbol(c, Decl(b.ts, 1, 12))
+>a : Symbol(a, Decl(b.ts, 0, 8))
+
+export function f() {
+>f : Symbol(f, Decl(b.ts, 1, 19))
+
+    return a.a;
+>a.a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a : Symbol(a, Decl(b.ts, 0, 8))
+>a : Symbol(a.a, Decl(a.ts, 4, 12))
+}
+const d: number = a.a.a.b;
+>d : Symbol(d, Decl(b.ts, 5, 5))
+>a.a.a.b : Symbol(a.b, Decl(a.ts, 0, 12))
+>a.a.a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a.a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a : Symbol(a, Decl(b.ts, 0, 8))
+>a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a : Symbol(a.a, Decl(a.ts, 4, 12))
+>b : Symbol(a.b, Decl(a.ts, 0, 12))
+
+a.then();
+>a : Symbol(a, Decl(b.ts, 0, 8))
+
+a.a.a.then();
+>a.a.a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a.a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a : Symbol(a, Decl(b.ts, 0, 8))
+>a : Symbol(a.a, Decl(a.ts, 4, 12))
+>a : Symbol(a.a, Decl(a.ts, 4, 12))
+

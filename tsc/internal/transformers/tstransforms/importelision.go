@@ -98,7 +98,7 @@ func (tx *ImportElisionTransformer) visit(node *ast.Node) *ast.Node {
 				return nil
 			}
 		}
-		return tx.Factory().UpdateExportDeclaration(n, nil /*modifiers*/, false /*isTypeOnly*/, exportClause, tx.Visitor().VisitNode(n.ModuleSpecifier), tx.Visitor().VisitNode(n.Attributes))
+		return tx.Factory().UpdateExportDeclaration(n, nil /*modifiers*/, n.PhaseModifier, exportClause, tx.Visitor().VisitNode(n.ModuleSpecifier), tx.Visitor().VisitNode(n.Attributes))
 	case ast.KindNamedExports:
 		n := node.AsNamedExports()
 		elements := tx.Visitor().VisitNodes(n.Elements)

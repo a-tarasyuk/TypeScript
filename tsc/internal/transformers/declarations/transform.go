@@ -376,7 +376,7 @@ func (tx *DeclarationTransformer) transformSourceFile(node *ast.SourceFile) *ast
 }
 
 func createEmptyExports(factory *ast.NodeFactory) *ast.Node {
-	return factory.NewExportDeclaration(nil /*isTypeOnly*/, false, factory.NewNamedExports(factory.NewNodeList([]*ast.Node{})), nil, nil)
+	return factory.NewExportDeclaration(nil /*modifiers*/, ast.KindUnknown, factory.NewNamedExports(factory.NewNodeList([]*ast.Node{})), nil, nil)
 }
 
 func (tx *DeclarationTransformer) transformAndReplaceLatePaintedStatements(statements *ast.StatementList) *ast.StatementList {
@@ -1165,7 +1165,7 @@ func (tx *DeclarationTransformer) visitDeclarationStatements(input *ast.Node) *a
 		return tx.Factory().UpdateExportDeclaration(
 			input.AsExportDeclaration(),
 			input.Modifiers(),
-			input.IsTypeOnly(),
+			input.AsExportDeclaration().PhaseModifier,
 			input.AsExportDeclaration().ExportClause,
 			tx.rewriteModuleSpecifier(input, input.ModuleSpecifier()),
 			input.AsExportDeclaration().Attributes,
@@ -1333,7 +1333,7 @@ func (tx *DeclarationTransformer) transformBinaryExpressionToExportDeclaration(i
 
 	return tx.Factory().NewExportDeclaration(
 		nil,
-		false,
+		ast.KindUnknown,
 		tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{tx.Factory().NewExportSpecifier(false, propertyName, name)})),
 		nil,
 		nil,
@@ -1419,7 +1419,7 @@ func (tx *DeclarationTransformer) transformCommonJSExportWorker(input *ast.Node,
 					importDecl := tx.Factory().NewImportEqualsDeclaration(nil, false, importAlias, qualifiedName)
 
 					exportSpecifier := tx.Factory().NewExportSpecifier(false, importAlias, name)
-					exportDecl := tx.Factory().NewExportDeclaration(nil, false, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{exportSpecifier})), nil, nil)
+					exportDecl := tx.Factory().NewExportDeclaration(nil, ast.KindUnknown, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{exportSpecifier})), nil, nil)
 					tx.removeAllComments(exportDecl)
 
 					return tx.Factory().NewSyntaxList(append([]*ast.Node{nsDecl, importDecl}, exportDecl))
@@ -1455,7 +1455,7 @@ func (tx *DeclarationTransformer) transformCommonJSExportWorker(input *ast.Node,
 			tx.preserveJsDoc(classDecl, input)
 			if !ast.IsIdentifier(name) {
 				// Non-identifier name: emit class declaration + named export
-				exportDecl := tx.Factory().NewExportDeclaration(nil, false, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{tx.Factory().NewExportSpecifier(false, className, name)})), nil, nil)
+				exportDecl := tx.Factory().NewExportDeclaration(nil, ast.KindUnknown, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{tx.Factory().NewExportSpecifier(false, className, name)})), nil, nil)
 				tx.removeAllComments(exportDecl)
 				return tx.Factory().NewSyntaxList([]*ast.Node{classDecl, exportDecl})
 			}
@@ -1526,7 +1526,7 @@ func (tx *DeclarationTransformer) transformCommonJSExportWorker(input *ast.Node,
 	}
 	statement := tx.Factory().NewVariableStatement(modList, tx.Factory().NewVariableDeclarationList(tx.Factory().NewNodeList([]*ast.Node{varDecl}), ast.NodeFlagsConst))
 
-	assignment := tx.Factory().NewExportDeclaration(nil, false, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{tx.Factory().NewExportSpecifier(false, newId, name)})), nil, nil)
+	assignment := tx.Factory().NewExportDeclaration(nil, ast.KindUnknown, tx.Factory().NewNamedExports(tx.Factory().NewNodeList([]*ast.Node{tx.Factory().NewExportSpecifier(false, newId, name)})), nil, nil)
 	// Remove comments from the export declaration and copy them onto the synthetic _default declaration
 	tx.preserveJsDoc(statement, input)
 	tx.removeAllComments(assignment)
@@ -2488,9 +2488,6 @@ func (tx *DeclarationTransformer) transformImportDeclaration(decl *ast.ImportDec
 		)
 	}
 	phaseModifier := decl.ImportClause.AsImportClause().PhaseModifier
-	if phaseModifier == ast.KindDeferKeyword {
-		phaseModifier = ast.KindUnknown
-	}
 	// The `importClause` visibility corresponds to the default's visibility.
 	var visibleDefaultBinding *ast.Node
 	if decl.ImportClause != nil && decl.ImportClause.Name() != nil && tx.resolver.IsDeclarationVisible(decl.ImportClause) {
@@ -2849,7 +2846,7 @@ func (tx *DeclarationTransformer) transformExpandoAssignment(node *ast.BinaryExp
 				tx.Factory().NewExportSpecifier(false /*isTypeOnly*/, localName, exportName),
 			},
 		))
-		statements = append(statements, tx.Factory().NewExportDeclaration(nil /*modifiers*/, false /*isTypeOnly*/, namedExports, nil /*moduleSpecifier*/, nil /*attributes*/))
+		statements = append(statements, tx.Factory().NewExportDeclaration(nil /*modifiers*/, ast.KindUnknown /*phaseModifier*/, namedExports, nil /*moduleSpecifier*/, nil /*attributes*/))
 		if !preexistingExpandoHasExport {
 			// Done before adding statements to expando members to keep the initial variable statement, before we rename anything, private
 			tx.addExportModifierToExpandoMembers(hostId)

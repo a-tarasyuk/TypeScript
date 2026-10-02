@@ -10,6 +10,7 @@ import {
     InternalSymbolName,
     isCallExpression,
     isClassDeclaration,
+    isExportDeclaration,
     isExpressionStatement,
     isFunctionDeclaration,
     isIdentifier,
@@ -522,6 +523,23 @@ describe("API", { concurrency }, () => {
         await firstDispose; // @sync: retained.dispose();
         await using retainedAfterDispose = await api.createSourceFile("/component.tsx", sourceText);
         assert.strictEqual(retainedAfterDispose.sourceFile, retainedAgain.sourceFile);
+    });
+
+    test("exportDefer1", async () => {
+        await using api = spawnAPI();
+        await using lease = await api.createSourceFile(
+            "/a.ts",
+            `export { a } from "./a";
+export type { I } from "./a";
+export defer { a } from "./a";
+export defer * as b from "./a";`,
+        );
+
+        const phases = lease.sourceFile.statements.map(node => cast(node, isExportDeclaration).phaseModifier);
+        assert.deepEqual(phases, [undefined, SyntaxKind.TypeKeyword, SyntaxKind.DeferKeyword, SyntaxKind.DeferKeyword]);
+
+        const clone = getSynthesizedDeepClone(lease.sourceFile);
+        assert.deepEqual(clone.statements.map(node => cast(node, isExportDeclaration).phaseModifier), phases);
     });
 
     test("remote declarations lazily fetch and cache binder symbols", async () => {

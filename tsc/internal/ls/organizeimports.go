@@ -3,6 +3,7 @@ package ls
 import (
 	"context"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
@@ -350,7 +351,7 @@ func hasModuleDeclarationMatchingSpecifier(sourceFile *ast.SourceFile, moduleSpe
 	return false
 }
 
-// getImportAttributesKey returns a key for grouping imports by their attributes.
+// getImportAttributesKey returns a key for grouping declarations by their import attributes.
 func getImportAttributesKey(attributes *ast.ImportAttributesNode) string {
 	if attributes == nil {
 		return ""
@@ -371,12 +372,10 @@ func getImportAttributesKey(attributes *ast.ImportAttributesNode) string {
 
 	for _, attrNode := range attrNodes {
 		attr := attrNode.AsImportAttribute()
-		key.WriteString(attr.Name().Text())
+		key.WriteString(strconv.Quote(attr.Name().Text()))
 		key.WriteString(":")
 		if ast.IsStringLiteralLike(attr.Value.AsNode()) {
-			key.WriteString(`"`)
-			key.WriteString(attr.Value.Text())
-			key.WriteString(`"`)
+			key.WriteString(strconv.Quote(attr.Value.Text()))
 		} else {
 			key.WriteString(attr.Value.AsNode().Text())
 		}
@@ -864,8 +863,12 @@ func coalesceExportsWorker(
 		return exportGroup
 	}
 
-	exportsByModuleSpecifier := make(map[string][]*ast.Statement)
-	var moduleSpecifierOrder []string
+	type exportGroupKey struct {
+		moduleSpecifier string
+		attributesKey   string
+	}
+	exportGroups := make(map[exportGroupKey][]*ast.Statement)
+	var groupOrder []exportGroupKey
 
 	for _, exportDecl := range exportGroup {
 		export := exportDecl.AsExportDeclaration()
@@ -873,35 +876,40 @@ func coalesceExportsWorker(
 		if export.ModuleSpecifier != nil {
 			moduleSpecifier = export.ModuleSpecifier.Text()
 		}
-		if _, exists := exportsByModuleSpecifier[moduleSpecifier]; !exists {
-			moduleSpecifierOrder = append(moduleSpecifierOrder, moduleSpecifier)
+		key := exportGroupKey{
+			moduleSpecifier: moduleSpecifier,
+			attributesKey:   getImportAttributesKey(export.Attributes),
 		}
-		exportsByModuleSpecifier[moduleSpecifier] = append(exportsByModuleSpecifier[moduleSpecifier], exportDecl)
+		if _, exists := exportGroups[key]; !exists {
+			groupOrder = append(groupOrder, key)
+		}
+		exportGroups[key] = append(exportGroups[key], exportDecl)
 	}
 
-	slices.SortStableFunc(moduleSpecifierOrder, func(a, b string) int {
-		if a == "" && b != "" {
+	slices.SortStableFunc(groupOrder, func(a, b exportGroupKey) int {
+		if a.moduleSpecifier == "" && b.moduleSpecifier != "" {
 			return 1
 		}
-		if a != "" && b == "" {
+		if a.moduleSpecifier != "" && b.moduleSpecifier == "" {
 			return -1
 		}
-		return moduleSpecifierComparer(a, b)
+		return moduleSpecifierComparer(a.moduleSpecifier, b.moduleSpecifier)
 	})
 
 	var coalescedExports []*ast.Statement
 	factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
 
-	for _, moduleSpecifier := range moduleSpecifierOrder {
-		group := exportsByModuleSpecifier[moduleSpecifier]
+	for _, key := range groupOrder {
+		group := exportGroups[key]
 
 		categorized := getCategorizedExports(group)
 
 		if categorized.exportWithoutClause != nil {
 			coalescedExports = append(coalescedExports, categorized.exportWithoutClause)
 		}
+		coalescedExports = append(coalescedExports, categorized.namespaceExports...)
 
-		for _, subGroup := range [][]*ast.Statement{categorized.namedExports, categorized.typeOnlyExports} {
+		for _, subGroup := range [][]*ast.Statement{categorized.namedExports, categorized.typeOnlyExports, categorized.deferredExports} {
 			if len(subGroup) == 0 {
 				continue
 			}
@@ -937,7 +945,7 @@ func coalesceExportsWorker(
 			newExportDecl := factory.UpdateExportDeclaration(
 				exportDecl,
 				exportDecl.Modifiers(),
-				exportDecl.IsTypeOnly,
+				exportDecl.PhaseModifier,
 				updatedExportClause,
 				exportDecl.ModuleSpecifier,
 				exportDecl.Attributes,
@@ -951,13 +959,15 @@ func coalesceExportsWorker(
 
 type categorizedExports struct {
 	exportWithoutClause *ast.Statement
+	namespaceExports    []*ast.Statement
 	namedExports        []*ast.Statement
 	typeOnlyExports     []*ast.Statement
+	deferredExports     []*ast.Statement
 }
 
 func getCategorizedExports(exportGroup []*ast.Statement) categorizedExports {
 	var exportWithoutClause *ast.Statement
-	var namedExports, typeOnlyExports []*ast.Statement
+	var namespaceExports, namedExports, typeOnlyExports, deferredExports []*ast.Statement
 
 	for _, exportDecl := range exportGroup {
 		export := exportDecl.AsExportDeclaration()
@@ -965,7 +975,11 @@ func getCategorizedExports(exportGroup []*ast.Statement) categorizedExports {
 			if exportWithoutClause == nil {
 				exportWithoutClause = exportDecl
 			}
-		} else if export.IsTypeOnly {
+		} else if ast.IsNamespaceExport(export.ExportClause) {
+			namespaceExports = append(namespaceExports, exportDecl)
+		} else if export.PhaseModifier == ast.KindDeferKeyword {
+			deferredExports = append(deferredExports, exportDecl)
+		} else if export.IsTypeOnly() {
 			typeOnlyExports = append(typeOnlyExports, exportDecl)
 		} else {
 			namedExports = append(namedExports, exportDecl)
@@ -974,7 +988,9 @@ func getCategorizedExports(exportGroup []*ast.Statement) categorizedExports {
 
 	return categorizedExports{
 		exportWithoutClause: exportWithoutClause,
+		namespaceExports:    namespaceExports,
 		namedExports:        namedExports,
 		typeOnlyExports:     typeOnlyExports,
+		deferredExports:     deferredExports,
 	}
 }

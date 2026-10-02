@@ -2617,7 +2617,11 @@ func (p *Parser) parseExportDeclaration(pos int, jsdoc jsdocScannerInfo, modifie
 	var exportClause *ast.Node
 	var moduleSpecifier *ast.Expression
 	var attributes *ast.Node
-	isTypeOnly := p.parseOptional(ast.KindTypeKeyword)
+	phaseModifier := ast.KindUnknown
+	if p.token == ast.KindTypeKeyword || p.token == ast.KindDeferKeyword {
+		phaseModifier = p.token
+		p.nextToken()
+	}
 	namespaceExportPos := p.nodePos()
 	if p.parseOptional(ast.KindAsteriskToken) {
 		if p.parseOptional(ast.KindAsKeyword) {
@@ -2644,7 +2648,7 @@ func (p *Parser) parseExportDeclaration(pos int, jsdoc jsdocScannerInfo, modifie
 	p.parseSemicolon()
 	p.contextFlags = saveContextFlags
 	p.statementHasAwaitIdentifier = saveHasAwaitIdentifier
-	result := p.finishNode(p.factory.NewExportDeclaration(modifiers, isTypeOnly, exportClause, moduleSpecifier, attributes), pos)
+	result := p.finishNode(p.factory.NewExportDeclaration(modifiers, phaseModifier, exportClause, moduleSpecifier, attributes), pos)
 	p.withJSDoc(result, jsdoc)
 	p.checkJSSyntax(result)
 	return result
@@ -4041,7 +4045,7 @@ func (p *Parser) nextTokenCanFollowModifier() bool {
 		if p.token == ast.KindDefaultKeyword {
 			return p.lookAhead((*Parser).nextTokenCanFollowDefaultKeyword)
 		}
-		if p.token == ast.KindTypeKeyword {
+		if p.token == ast.KindTypeKeyword || p.token == ast.KindDeferKeyword {
 			return p.lookAhead((*Parser).nextTokenCanFollowExportModifier)
 		}
 		return p.canFollowExportModifier()
@@ -6218,7 +6222,7 @@ func (p *Parser) scanStartOfDeclaration() bool {
 				p.token == ast.KindDefaultKeyword || p.token == ast.KindAsKeyword || p.token == ast.KindAtToken {
 				return true
 			}
-			if p.token == ast.KindTypeKeyword {
+			if p.token == ast.KindTypeKeyword || p.token == ast.KindDeferKeyword {
 				p.nextToken()
 				return p.token == ast.KindAsteriskToken || p.token == ast.KindOpenBraceToken || p.isIdentifier() && !p.hasPrecedingLineBreak()
 			}

@@ -4023,8 +4023,8 @@ func (p *Printer) emitExportDeclaration(node *ast.ExportDeclaration) {
 	p.emitModifierList(node.AsNode(), node.Modifiers(), false /*allowDecorators*/)
 	pos := p.emitToken(ast.KindExportKeyword, node.Pos(), WriteKindKeyword, node.AsNode())
 	p.writeSpace()
-	if node.IsTypeOnly {
-		pos = p.emitToken(ast.KindTypeKeyword, pos, WriteKindKeyword, node.AsNode())
+	if node.PhaseModifier != ast.KindUnknown {
+		pos = p.emitToken(node.PhaseModifier, pos, WriteKindKeyword, node.AsNode())
 		p.writeSpace()
 	}
 	if node.ExportClause != nil {
